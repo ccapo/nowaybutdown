@@ -1,3 +1,4 @@
+#include <iostream>
 #include "libtcod.hpp"
 class Actor;
 #include "Destructible.hpp"

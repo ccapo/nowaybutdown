@@ -13,11 +13,15 @@ public :
     Actor *player;
     Map *map;
     int fovRadius;
-    int screenWidth;
-    int screenHeight;
+    int windowWidth;
+    int windowHeight;
+    int displayWidth;
+    int displayHeight;
+    int mapWidth;
+    int mapHeight;
     Gui *gui;
 
-    Engine(int screenWidth, int screenHeight);
+    Engine(int windowWidth, int windowHeight);
     ~Engine();
     void update();
     void render();

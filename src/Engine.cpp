@@ -1,22 +1,23 @@
 #include <math.h>
 #include "Main.hpp"
 
-Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),fovRadius(8),
-	screenWidth(screenWidth),screenHeight(screenHeight) {
+Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadius(8),
+	windowWidth(windowWidth),windowHeight(windowHeight),displayWidth(windowWidth),displayHeight(windowHeight - 9),
+	mapWidth(2*windowWidth),mapHeight(2*(windowHeight - 9)) {
 	TCODConsole::setCustomFont("data/fonts/arial8x8-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
-    TCODConsole::initRoot(screenWidth,screenHeight,"NoWayButDown v0.1.0",false);
+    TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.1.0",false);
     TCODConsole::mapAsciiCodeToFont(256, 9, 10); // orc
     TCODConsole::mapAsciiCodeToFont(257, 0, 10); // troll
     TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player
 	TCODConsole::mapAsciiCodeToFont(259, 10, 8); // health potion
 	TCODConsole::mapAsciiCodeToFont(260, 18, 10); // corpse
-    player = new Actor(screenWidth/2,screenHeight/2,'@',"player",TCODColor::white);
-    player->destructible=new PlayerDestructible(30,2,"your cadaver");
+    player = new Actor(10,10,'@',"player",TCODColor::white);
+    player->destructible=new PlayerDestructible(30,2,"your corpse");
     player->attacker=new Attacker(5);
     player->ai = new PlayerAi();
     player->container = new Container(26);
     actors.push(player);
-    map = new Map(screenWidth,screenHeight - 9);
+    map = new Map(mapWidth,mapHeight);
     gui = new Gui();
     gui->message(TCODColor::red, "You decide to venture inside the cave" );
 	gui->message(TCODColor::red, "Only to have the opening collapse behind you!" );
@@ -48,6 +49,7 @@ void Engine::update() {
 void Engine::render() {
 	TCODConsole::root->clear();
 	// draw the map
+	map->moveDisplay(player->x, player->y);
 	map->render();
 	// draw the actors
 	for (Actor **iterator=actors.begin();

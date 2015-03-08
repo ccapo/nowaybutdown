@@ -17,8 +17,9 @@ Actor::~Actor() {
 }
 
 void Actor::render() const {
-    TCODConsole::root->setChar(x,y,ch);
-    TCODConsole::root->setCharForeground(x,y,col);
+	int cx = x - engine.map->display_x, cy = y - engine.map->display_y;
+    TCODConsole::root->setChar(cx,cy,ch);
+    TCODConsole::root->setCharForeground(cx,cy,col);
 }
 
 void Actor::update() {

@@ -35,7 +35,7 @@ public :
     }
 };
 
-Map::Map(int width, int height) : width(width),height(height) {
+Map::Map(int width, int height) : width(width),height(height),display_x(0),display_y(0) {
     tiles=new Tile[width*height];
     map=new TCODMap(width,height);
     TCODBsp bsp(0,0,width,height);
@@ -136,7 +136,7 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
 		    int x=rng->getInt(x1,x2);
 		    int y=rng->getInt(y1,y2);
     		if ( canWalk(x,y) ) {
-				addMonster(x,y);
+				//addMonster(x,y);
 			}
 		    nbMonsters--;
 		}
@@ -193,20 +193,36 @@ void Map::computeFov() {
         engine.fovRadius);
 }
 
+void Map::moveDisplay(int x, int y)
+{
+    // New display coordinates (top-left corner of the screen relative to the map)
+    // Coordinates so that the target is at the center of the screen
+    int cx = x - engine.displayWidth/2;
+    int cy = y - engine.displayHeight/2;
+
+    // Make sure the DISPLAY doesn't see outside the map
+    if(cx < 0) cx = 0;
+    if(cy < 0) cy = 0;
+    if(cx > width - engine.displayWidth - 1) cx = width - engine.displayWidth - 1;
+    if(cy > height - engine.displayHeight - 1) cy = height - engine.displayHeight - 1;
+
+    display_x = cx; display_y = cy;
+}
+
 void Map::render() const {
     static const TCODColor darkWall(0,0,100);
     static const TCODColor darkGround(50,50,150);
 	static const TCODColor lightWall(130,110,50);
 	static const TCODColor lightGround(200,180,50);
 
-	for (int x=0; x < width; x++) {
-	    for (int y=0; y < height; y++) {
+    int posx = display_x, posy = display_y;
+
+	for (int x=posx; x < engine.displayWidth + posx; x++) {
+	    for (int y=posy; y < engine.displayHeight + posy; y++) {
 	        if ( isInFov(x,y) ) {
-	            TCODConsole::root->setCharBackground(x,y,
-	                isWall(x,y) ? lightWall :lightGround );
+	            TCODConsole::root->setCharBackground(x - posx, y - posy, isWall(x,y) ? lightWall : lightGround );
 	        } else if ( isExplored(x,y) ) {
-	            TCODConsole::root->setCharBackground(x,y,
-	                isWall(x,y) ? darkWall : darkGround );
+	            TCODConsole::root->setCharBackground(x - posx, y - posy, isWall(x,y) ? darkWall : darkGround );
 	        }
    	    }
 	}
