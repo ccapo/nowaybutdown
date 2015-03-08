@@ -3,8 +3,8 @@
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP),fovRadius(8),
 	screenWidth(screenWidth),screenHeight(screenHeight) {
-	TCODConsole::setCustomFont("data/fonts/arial16x16-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
-    TCODConsole::initRoot(screenWidth,screenHeight,"NoWayButDown v0.0.1",false);
+	TCODConsole::setCustomFont("data/fonts/arial8x8-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
+    TCODConsole::initRoot(screenWidth,screenHeight,"NoWayButDown v0.1.0",false);
     TCODConsole::mapAsciiCodeToFont(256, 9, 10); // orc
     TCODConsole::mapAsciiCodeToFont(257, 0, 10); // troll
     TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player

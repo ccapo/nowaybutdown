@@ -45,8 +45,9 @@ void Gui::render() {
 	// Cave depth
 	con->setDefaultForeground(TCODColor::white);
 	con->print(1,3,"ATK: %d",999);
-	con->print(10,3,"DEF: %d",999);
-	con->print(1,4,"Depth: %d",999);
+	con->print(1,4,"DEF: %d",999);
+	con->print(1,5,"SPD: %d",999);
+	con->print(1,6,"Depth: %d",999);
 
 	// blit the GUI console on the root console
 	TCODConsole::blit(con,0,0,engine.screenWidth,PANEL_HEIGHT,

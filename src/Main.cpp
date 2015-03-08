@@ -1,6 +1,6 @@
 #include "Main.hpp"
 
-Engine engine(80,50);
+Engine engine(120,75);
 
 int main() {
     while ( !TCODConsole::isWindowClosed() ) {
