@@ -1,5 +1,8 @@
 class Ai {
 public :
+
+	Ai() {}
+	virtual ~Ai() {}
 	virtual void update(Actor *owner)=0;
 };
 

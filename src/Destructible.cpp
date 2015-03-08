@@ -5,6 +5,10 @@ Destructible::Destructible(float maxHp, float defense, const char *corpseName) :
 	maxHp(maxHp),hp(maxHp),defense(defense),corpseName(corpseName) {
 }
 
+Destructible::~Destructible(){
+	corpseName = NULL;
+}
+
 float Destructible::takeDamage(Actor *owner, float damage) {
 	damage -= defense;
 	if ( damage > 0 ) {

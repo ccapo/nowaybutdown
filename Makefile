@@ -2,10 +2,9 @@ SRCDIR = src
 INCDIR = include
 LIBDIR = lib
 CPP = g++
-UPX = upx -qq
 
-CFLAGS = -O2 -s -w -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
-#CFLAGS = -O0 -g -Wall -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
+#CFLAGS = -O2 -s -w -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
+CFLAGS = -O0 -g -Wall -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
 
 # Determine if operating system is 32-bit or 64-bit
 ifeq ($(shell uname -m),x86_64)
@@ -36,7 +35,6 @@ all: nwbd bundle-linux
 nwbd: $(HEADERS) $(OBJECTS)
 	@$(CPP) $(CFLAGS) $(OBJECTS) -o $@ $(LFLAGS)
 	@rm -f $(OBJECTS)
-#	$(UPX) $@
 
 clean:
 	@rm -f $(OBJECTS)
