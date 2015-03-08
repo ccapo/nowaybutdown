@@ -41,3 +41,6 @@ nwbd: $(HEADERS) $(OBJECTS)
 clean:
 	@rm -f $(OBJECTS)
 	@rm -f nwbd
+
+bundle-linux:
+	@tar -zcf nwbd-linux.tar.gz data lib nwbd
