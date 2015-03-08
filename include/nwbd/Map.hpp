@@ -1,6 +1,9 @@
+#define NGOALS 2
+
 struct Tile {
-    bool explored; // has the player already seen this tile ?
-    Tile() : explored(false) {}
+    bool explored;        // Has the player already seen this tile ?
+    double goals[NGOALS]; // Goal values
+    Tile() : explored(false), goals{0.0, 0.0} {}
 };
  
 class Map {

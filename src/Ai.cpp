@@ -112,7 +112,7 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx,int targety) {
 		iterator != engine.actors.end(); iterator++) {
 		Actor *actor=*iterator;
 		bool corpseOrItem=(actor->destructible && actor->destructible->isDead())
-			|| actor->pickable;
+			|| actor->item;
 		if ( corpseOrItem
 			 && actor->x == targetx && actor->y == targety ) {
 			engine.gui->message(TCODColor::lightGrey,"There's a %s here.",actor->name);
@@ -129,7 +129,7 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
 		{
 			Actor *actor=choseFromInventory(owner);
 			if ( actor ) {
-				actor->pickable->drop(actor,owner);
+				actor->item->drop(actor,owner);
 				engine.gameStatus=Engine::NEW_TURN;
 			}			
 		}
@@ -140,8 +140,8 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
 			for (Actor **iterator=engine.actors.begin();
 				iterator != engine.actors.end(); iterator++) {
 				Actor *actor=*iterator;
-				if ( actor->pickable && actor->x == owner->x && actor->y == owner->y ) {
-					if (actor->pickable->pick(actor,owner)) {
+				if ( actor->item && actor->x == owner->x && actor->y == owner->y ) {
+					if (actor->item->pick(actor,owner)) {
 						found=true;
 						engine.gui->message(TCODColor::lightGrey,"You pick the %s.",
 							actor->name);
@@ -162,7 +162,7 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
 		{
 			Actor *actor=choseFromInventory(owner);
 			if ( actor ) {
-				actor->pickable->use(actor,owner);
+				actor->item->use(actor,owner);
 				engine.gameStatus=Engine::NEW_TURN;
 			}
 		}

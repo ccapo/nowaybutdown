@@ -29,8 +29,8 @@ float Destructible::heal(float amount) {
 
 void Destructible::die(Actor *owner) {
 	// transform the actor into a corpse!
-	owner->ch='%';
-	owner->col=TCODColor::darkRed;	
+	owner->ch=260;
+	owner->col=TCODColor::white;	
 	owner->name=corpseName;
 	owner->blocks=false;
 	// make sure corpses are drawn before living actors

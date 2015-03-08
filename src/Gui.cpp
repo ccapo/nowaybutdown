@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "Main.hpp"
 
-static const int PANEL_HEIGHT=7;
+static const int PANEL_HEIGHT=9;
 static const int BAR_WIDTH=20;
 static const int MSG_X=BAR_WIDTH+2;
 static const int MSG_HEIGHT=PANEL_HEIGHT-1;
@@ -41,6 +41,12 @@ void Gui::render() {
 
 	// mouse look
 	renderMouseLook();
+
+	// Cave depth
+	con->setDefaultForeground(TCODColor::white);
+	con->print(1,3,"ATK: %d",999);
+	con->print(10,3,"DEF: %d",999);
+	con->print(1,4,"Depth: %d",999);
 
 	// blit the GUI console on the root console
 	TCODConsole::blit(con,0,0,engine.screenWidth,PANEL_HEIGHT,

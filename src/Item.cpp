@@ -1,6 +1,6 @@
 #include "Main.hpp"
 
-bool Pickable::pick(Actor *owner, Actor *wearer) {
+bool Item::pick(Actor *owner, Actor *wearer) {
 	if ( wearer->container && wearer->container->add(owner) ) {
 		engine.actors.remove(owner);
 		return true;
@@ -8,7 +8,7 @@ bool Pickable::pick(Actor *owner, Actor *wearer) {
 	return false;
 }
 
-void Pickable::drop(Actor *owner, Actor *wearer) {
+void Item::drop(Actor *owner, Actor *wearer) {
 	if ( wearer->container ) {
 		wearer->container->remove(owner);
 		engine.actors.push(owner);
@@ -19,7 +19,7 @@ void Pickable::drop(Actor *owner, Actor *wearer) {
 	}
 }
 
-bool Pickable::use(Actor *owner, Actor *wearer) {
+bool Item::use(Actor *owner, Actor *wearer) {
 	if ( wearer->container ) {
 		wearer->container->remove(owner);
 		delete owner;
@@ -35,7 +35,7 @@ bool Healer::use(Actor *owner, Actor *wearer) {
 	if ( wearer->destructible ) {
 		float amountHealed = wearer->destructible->heal(amount);
 		if ( amountHealed > 0 ) {
-			return Pickable::use(owner,wearer);
+			return Item::use(owner,wearer);
 		}
 	}
 	return false;
@@ -57,7 +57,7 @@ bool LightningBolt::use(Actor *owner, Actor *wearer) {
 		"The damage is %g hit points.",
 		closestMonster->name,damage);
 	closestMonster->destructible->takeDamage(closestMonster,damage);
-	return Pickable::use(owner,wearer);
+	return Item::use(owner,wearer);
 }
 
 Confuser::Confuser(int nbTurns, float range)
@@ -80,7 +80,7 @@ bool Confuser::use(Actor *owner, Actor *wearer) {
 	actor->ai = confusedAi;
 	engine.gui->message(TCODColor::lightGreen,"The eyes of the %s look vacant,\nas he starts to stumble around!",
 		actor->name);
-	return Pickable::use(owner,wearer);
+	return Item::use(owner,wearer);
 }
 
 Fireball::Fireball(float range, float damage)
@@ -105,6 +105,6 @@ bool Fireball::use(Actor *owner, Actor *wearer) {
 			actor->destructible->takeDamage(actor,damage);
 		}
 	}
-	return Pickable::use(owner,wearer);
+	return Item::use(owner,wearer);
 }
 

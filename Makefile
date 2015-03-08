@@ -4,8 +4,8 @@ LIBDIR = lib
 CPP = g++
 UPX = upx -qq
 
-CFLAGS = -O2 -s -w -I$(INCDIR)/roguelike-tutorial -I$(INCDIR)/tcod
-#CFLAGS = -O0 -g -Wall -I$(INCDIR)/roguelike-tutorial -I$(INCDIR)/tcod
+CFLAGS = -O2 -s -w -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
+#CFLAGS = -O0 -g -Wall -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
 
 # Determine if operating system is 32-bit or 64-bit
 ifeq ($(shell uname -m),x86_64)
@@ -23,21 +23,21 @@ endif
 .SUFFIXES: .o .hpp .cpp
 
 $(SRCDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CPP) $(CFLAGS) -c $< -o $@
+	@$(CPP) $(CFLAGS) -c $< -o $@
 
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
 
-HEADERS = $(wildcard $(INCDIR)/roguelike-tutorial/*.hpp)
+HEADERS = $(wildcard $(INCDIR)/nwbd/*.hpp)
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
-all: roguelike-tutorial
+all: nwbd
 
-roguelike-tutorial: $(HEADERS) $(OBJECTS)
-	$(CPP) $(CFLAGS) $(OBJECTS) -o $@ $(LFLAGS)
-	rm -f $(OBJECTS)
-	$(UPX) $@
+nwbd: $(HEADERS) $(OBJECTS)
+	@$(CPP) $(CFLAGS) $(OBJECTS) -o $@ $(LFLAGS)
+	@rm -f $(OBJECTS)
+#	$(UPX) $@
 
 clean:
-	rm -f $(OBJECTS)
-	rm -f roguelike-tutorial
+	@rm -f $(OBJECTS)
+	@rm -f nwbd

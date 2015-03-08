@@ -3,7 +3,7 @@ class Actor;
 #include "Destructible.hpp"
 #include "Attacker.hpp"
 #include "Ai.hpp"
-#include "Pickable.hpp"
+#include "Item.hpp"
 #include "Container.hpp"
 #include "Actor.hpp"
 #include "Map.hpp"

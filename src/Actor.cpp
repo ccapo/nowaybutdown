@@ -5,14 +5,14 @@ Actor::Actor(int x, int y, int ch, const char *name,
     const TCODColor &col) :
     x(x),y(y),ch(ch),col(col),name(name),
     blocks(true),attacker(NULL),destructible(NULL),ai(NULL),
-    pickable(NULL),container(NULL) {
+    item(NULL),container(NULL) {
 }
  
 Actor::~Actor() {
 	if ( attacker ) delete attacker;
 	if ( destructible ) delete destructible;
 	if ( ai ) delete ai;
-	if ( pickable ) delete pickable;
+	if ( item ) delete item;
 	if ( container ) delete container;
 }
 
