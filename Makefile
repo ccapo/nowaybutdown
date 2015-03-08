@@ -31,7 +31,7 @@ HEADERS = $(wildcard $(INCDIR)/nwbd/*.hpp)
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
-all: nwbd
+all: nwbd bundle-linux
 
 nwbd: $(HEADERS) $(OBJECTS)
 	@$(CPP) $(CFLAGS) $(OBJECTS) -o $@ $(LFLAGS)
