@@ -8,7 +8,7 @@ public :
 	Attacker *attacker; // something that deals damages
 	Destructible *destructible; // something that can be damaged
 	Ai *ai; // something self-updating
-	Item *item; // something that can be picked and used
+	Item *item; // something that can be grabbed and used
 	Container *container; // something that can contain actors
 	 
 	Actor(int x, int y, int ch, const char *name, const TCODColor &col);

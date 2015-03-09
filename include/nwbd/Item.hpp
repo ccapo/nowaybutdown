@@ -2,7 +2,7 @@ class Item {
 public :
 	Item() {}
 	virtual ~Item() {}
-	bool pick(Actor *owner, Actor *wearer);
+	bool grab(Actor *owner, Actor *wearer);
 	void drop(Actor *owner, Actor *wearer);
 	virtual bool use(Actor *owner, Actor *wearer);
 };

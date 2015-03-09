@@ -5,10 +5,11 @@
 
 ## Commands
 
-* Movement: Arrow Keys or WASD
+* Movement: Arrow Keys or IJKL
 * Menu: Escape
-* Grab Item: g
-* Drop Item: d
-* Wield Item: w
-* Use Item: Enter
+* Grab: g
+* Drop: d (From Menu Only)
+* Wield: w (From Menu Only)
+* Use: Enter (From Menu Only)
+* Quit: Close Window
 * Help Screen: ?

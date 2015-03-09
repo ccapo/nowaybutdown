@@ -84,6 +84,15 @@ void PlayerAi::update(Actor *owner) {
 		case TCODK_DOWN : dy=1; break;
 		case TCODK_LEFT : dx=-1; break;
 		case TCODK_RIGHT : dx=1; break;
+		case TCODK_ESCAPE : // display inventory
+		{
+			Actor *actor=choseFromInventory(owner);
+			if ( actor ) {
+				actor->item->use(actor,owner);
+				engine.gameStatus=Engine::NEW_TURN;
+			}
+		}
+		break;
 		case TCODK_CHAR : handleActionKey(owner, engine.lastKey.c); break;
         default:break;
     }
@@ -135,16 +144,16 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
 			}			
 		}
 		break;
-		case 'g' : // pickup item
+		case 'g' : // grab item
 		{
 			bool found=false;
 			for (Actor **iterator=engine.actors.begin();
 				iterator != engine.actors.end(); iterator++) {
 				Actor *actor=*iterator;
 				if ( actor->item && actor->x == owner->x && actor->y == owner->y ) {
-					if (actor->item->pick(actor,owner)) {
+					if (actor->item->grab(actor,owner)) {
 						found=true;
-						engine.gui->message(TCODColor::lightGrey,"You pick the %s.",
+						engine.gui->message(TCODColor::lightGrey,"You grab the %s.",
 							actor->name);
 						break;
 					} else if (! found) {
@@ -154,18 +163,14 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
 				}
 			}
 			if (!found) {
-				engine.gui->message(TCODColor::lightGrey,"There's nothing here that you can pick.");
+				engine.gui->message(TCODColor::lightGrey,"There's nothing here that you can grab.");
 			}
 			engine.gameStatus=Engine::NEW_TURN;
 		}
 		break;
-		case 'i' : // display inventory
+		case '?' : // help screen
 		{
-			Actor *actor=choseFromInventory(owner);
-			if ( actor ) {
-				actor->item->use(actor,owner);
-				engine.gameStatus=Engine::NEW_TURN;
-			}
+			helpScreen();
 		}
 		break;
 	}
@@ -178,8 +183,7 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 
 	// display the inventory frame
 	con.setDefaultForeground(TCODColor(200,180,50));
-	con.printFrame(0,0,INVENTORY_WIDTH,INVENTORY_HEIGHT,true,
-		TCOD_BKGND_DEFAULT,"Inventory");
+	con.printFrame(0,0,INVENTORY_WIDTH,INVENTORY_HEIGHT,true,TCOD_BKGND_DEFAULT,"Menu");
 
 	// display the items with their keyboard shortcut
 	con.setDefaultForeground(TCODColor::white);
@@ -188,8 +192,7 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 	for (Actor **it=owner->container->inventory.begin();
 		it != owner->container->inventory.end(); it++) {
 		Actor *actor=*it;
-		con.print(2,y,"(%c) %s", shortcut, actor->name);
-		y++;
+		con.print(2,y++,"(%c) %s", shortcut, actor->name);
 		shortcut++;
 	}
 
@@ -209,4 +212,39 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 		}
 	}
 	return NULL;
+}
+
+void PlayerAi::helpScreen() {
+	static const int HELP_WIDTH=40;
+	static const int HELP_HEIGHT=20;
+	static TCODConsole con(HELP_WIDTH,HELP_HEIGHT);
+	int y = 2;
+
+	// display the help frame
+	con.setDefaultForeground(TCODColor(200,180,50));
+	con.printFrame(0,0,HELP_WIDTH,HELP_HEIGHT,true,TCOD_BKGND_DEFAULT,"Help");
+
+	// display the help screen
+	con.setDefaultForeground(TCODColor::white);
+	con.print(2, y++, "%s", "Command List");
+	con.hline(2, y++, 12);
+	y++;
+
+	// content of help screen
+	con.print(2, y++, "%s", "Movement: Arrow Keys or IJKL");
+	con.print(2, y++, "%s", "Menu    : Escape");
+	con.print(2, y++, "%s", "Grab    : g");
+	con.print(2, y++, "%s", "Drop    : d (From Menu Only)");
+	con.print(2, y++, "%s", "Wield   : w (From Menu Only)");
+	con.print(2, y++, "%s", "Use     : Enter (From Menu Only)");
+	con.print(2, y++, "%s", "Quit    : Close Window");
+	con.print(2, y++, "%s", "Help    : ?");
+
+	// blit the help console on the root console
+	TCODConsole::blit(&con, 0, 0, HELP_WIDTH,HELP_HEIGHT, TCODConsole::root, engine.windowWidth/2 - HELP_WIDTH/2, engine.windowHeight/2 - HELP_HEIGHT/2);
+	TCODConsole::flush();
+
+	// wait for a key press
+	TCOD_key_t key;
+	TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
 }

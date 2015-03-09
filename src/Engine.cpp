@@ -12,7 +12,7 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
     TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player
 	TCODConsole::mapAsciiCodeToFont(259, 10, 8); // health potion
 	TCODConsole::mapAsciiCodeToFont(260, 18, 10); // corpse
-    player = new Actor(10,10,'@',"player",TCODColor::white);
+    player = new Actor(10,10,'@',"Player",TCODColor::white);
     player->destructible=new PlayerDestructible(30,2,"your corpse");
     player->attacker=new Attacker(5);
     player->ai = new PlayerAi();

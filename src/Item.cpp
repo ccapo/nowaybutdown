@@ -1,6 +1,6 @@
 #include "Main.hpp"
 
-bool Item::pick(Actor *owner, Actor *wearer) {
+bool Item::grab(Actor *owner, Actor *wearer) {
 	if ( wearer->container && wearer->container->add(owner) ) {
 		engine.actors.remove(owner);
 		return true;

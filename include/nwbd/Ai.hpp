@@ -33,4 +33,5 @@ protected :
 	bool moveOrAttack(Actor *owner, int targetx, int targety);
 	void handleActionKey(Actor *owner, int ascii);
 	Actor *choseFromInventory(Actor *owner);
+	void helpScreen();
 };

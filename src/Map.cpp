@@ -71,7 +71,7 @@ void Map::addMonster(int x, int y) {
 	TCODRandom *rng=TCODRandom::getInstance();
     if ( rng->getInt(0,100) < 80 ) {
         // create an orc
-        Actor *orc = new Actor(x,y,256,"orc",
+        Actor *orc = new Actor(x,y,256,"Orc",
             TCODColor::white);
         orc->destructible = new MonsterDestructible(10,0,"dead orc");
         orc->attacker = new Attacker(3);
@@ -79,7 +79,7 @@ void Map::addMonster(int x, int y) {
         engine.actors.push(orc);
     } else {
         // create a troll
-        Actor *troll = new Actor(x,y,257,"troll",
+        Actor *troll = new Actor(x,y,257,"Troll",
              TCODColor::white);
         troll->destructible = new MonsterDestructible(16,1,"troll carcass");
         troll->attacker = new Attacker(4);
@@ -219,8 +219,8 @@ void Map::render() const {
     TCODRandom *rng=TCODRandom::getInstance();
     float ti = rng->getFloat(-0.15f,0.15f); 
 
-	for (int x=posx; x < engine.displayWidth + posx; x++) {
-	    for (int y=posy; y < engine.displayHeight + posy; y++) {
+	for (int x=posx; x < engine.displayWidth + posx + 1; x++) {
+	    for (int y=posy; y < engine.displayHeight + posy + 1; y++) {
             // Cell distance to torch (squared)
             float dx = static_cast<float>(x - engine.player->x);
             float dy = static_cast<float>(y - engine.player->y);
