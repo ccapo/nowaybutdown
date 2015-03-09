@@ -41,4 +41,4 @@ clean:
 	@rm -f nwbd
 
 bundle-linux:
-	@tar -zcf nwbd-linux.tar.gz data lib nwbd
+	@tar -zcf nwbd-linux.tar.gz data lib nwbd HOWTO.md
