@@ -189,8 +189,7 @@ bool Map::isInFov(int x, int y) const {
 }
  
 void Map::computeFov() {
-    map->computeFov(engine.player->x,engine.player->y,
-        engine.fovRadius);
+    map->computeFov(engine.player->x,engine.player->y,engine.fovRadius);
 }
 
 void Map::moveDisplay(int x, int y)
@@ -210,17 +209,39 @@ void Map::moveDisplay(int x, int y)
 }
 
 void Map::render() const {
-    static const TCODColor darkWall(0,0,100);
-    static const TCODColor darkGround(50,50,150);
-	static const TCODColor lightWall(130,110,50);
-	static const TCODColor lightGround(200,180,50);
-
+    static const TCODColor darkWall = TCODColor::darkestGrey;
+    static const TCODColor lightWall = TCODColor(130,110,50);
+    static const TCODColor darkGround = TCODColor::darkerGrey;
+    static const TCODColor lightGround = TCODColor(200,180,50);
     int posx = display_x, posy = display_y;
+
+    // Torch intensity variation
+    TCODRandom *rng=TCODRandom::getInstance();
+    float ti = rng->getFloat(-0.15f,0.15f); 
 
 	for (int x=posx; x < engine.displayWidth + posx; x++) {
 	    for (int y=posy; y < engine.displayHeight + posy; y++) {
+            // Cell distance to torch (squared)
+            float dx = static_cast<float>(x - engine.player->x);
+            float dy = static_cast<float>(y - engine.player->y);
+            float dr2 = dx*dx + dy*dy;
+
 	        if ( isInFov(x,y) ) {
-	            TCODConsole::root->setCharBackground(x - posx, y - posy, isWall(x,y) ? lightWall : lightGround );
+
+                // Torch flickering FX
+                TCODColor base = isWall(x,y) ? darkWall : darkGround;
+                TCODColor light = isWall(x,y) ? lightWall : lightGround;
+
+                // l = 1.0 at player position, 0.0 at a radius of TORCH_RADIUS cells
+                float coef1 = 1.0f/(1.0f + dr2/20.0f);
+                float coef2 = coef1 - 1.0f/(1.0f + engine.fovRadius*engine.fovRadius);
+                float l = coef2/(1.0f - 1.0f/(1.0f + engine.fovRadius*engine.fovRadius)) + ti;
+                l = CLAMP(0.0f, 1.0f, l);
+
+                // Interpolate the colour
+                TCODColor final = engine.player->destructible->isDead() ? base : TCODColor::lerp(base, light, l);
+
+	            TCODConsole::root->setCharBackground(x - posx, y - posy, final );
 	        } else if ( isExplored(x,y) ) {
 	            TCODConsole::root->setCharBackground(x - posx, y - posy, isWall(x,y) ? darkWall : darkGround );
 	        }

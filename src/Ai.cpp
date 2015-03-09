@@ -93,6 +93,7 @@ void PlayerAi::update(Actor *owner) {
     		engine.map->computeFov();
     	}
 	}
+
 }
 
 bool PlayerAi::moveOrAttack(Actor *owner, int targetx,int targety) {
@@ -178,7 +179,7 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 	// display the inventory frame
 	con.setDefaultForeground(TCODColor(200,180,50));
 	con.printFrame(0,0,INVENTORY_WIDTH,INVENTORY_HEIGHT,true,
-		TCOD_BKGND_DEFAULT,"inventory");
+		TCOD_BKGND_DEFAULT,"Inventory");
 
 	// display the items with their keyboard shortcut
 	con.setDefaultForeground(TCODColor::white);
