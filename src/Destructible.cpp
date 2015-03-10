@@ -2,10 +2,10 @@
 #include "Main.hpp"
 
 Destructible::Destructible(float maxHp, float defense, const char *corpseName) :
-	maxHp(maxHp),hp(maxHp),defense(defense),corpseName(corpseName) {
+	baseMaxHp(maxHp),maxHp(maxHp),hp(maxHp),baseDefense(defense),defense(defense),corpseName(corpseName) {
 }
 
-Destructible::~Destructible(){
+Destructible::~Destructible() {
 	corpseName = NULL;
 }
 
@@ -29,6 +29,11 @@ float Destructible::heal(float amount) {
 		hp=maxHp;
 	}
 	return amount;
+}
+
+void Destructible::wear(Actor *wear) {
+	maxHp = baseMaxHp + wear->destructible->maxHp;
+	defense = baseDefense + wear->destructible->defense;
 }
 
 void Destructible::die(Actor *owner) {

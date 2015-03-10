@@ -1,12 +1,9 @@
 #include <math.h>
 #include "Main.hpp"
 
-Actor::Actor(int x, int y, int ch, const char *name, 
-    const TCODColor &col) :
-    x(x),y(y),ch(ch),col(col),name(name),
-    blocks(true),attacker(NULL),destructible(NULL),ai(NULL),
-    item(NULL),container(NULL) {
-}
+Actor::Actor(int x, int y, int ch, const char *name, const TCODColor &col) :
+    x(x), y(y), ch(ch), col(col), name(name), blocks(true), wielding(false), wearing(false),
+    attacker(NULL), destructible(NULL), ai(NULL), item(NULL), container(NULL) {}
  
 Actor::~Actor() {
 	if ( attacker ) delete attacker;
@@ -18,8 +15,8 @@ Actor::~Actor() {
 
 void Actor::render() const {
 	int cx = x - engine.map->display_x, cy = y - engine.map->display_y;
-    TCODConsole::root->setChar(cx,cy,ch);
-    TCODConsole::root->setCharForeground(cx,cy,col);
+    TCODConsole::root->setChar(cx, cy, ch);
+    TCODConsole::root->setCharForeground(cx,  cy, col);
 }
 
 void Actor::update() {
@@ -27,7 +24,7 @@ void Actor::update() {
 }
 
 float Actor::getDistance(int cx, int cy) const {
-	int dx=x-cx;
-	int dy=y-cy;
-	return sqrtf(dx*dx+dy*dy);
+	int dx = x - cx;
+	int dy = y - cy;
+	return sqrtf(dx*dx + dy*dy);
 }

@@ -1,7 +1,9 @@
 class Destructible {
 public:
+	float baseMaxHp; // Base maximum health points
 	float maxHp; // maximum health points
 	float hp; // current health points
+	float baseDefense; // Base hit points deflected
 	float defense; // hit points deflected
 	const char *corpseName; // the actor's name once dead/destroyed
 
@@ -10,6 +12,7 @@ public:
 	inline bool isDead() { return hp <= 0; }
 	float takeDamage(Actor *owner, float damage);
 	float heal(float amount);
+	void wear(Actor *wear);
 	virtual void die(Actor *owner);
 };
 

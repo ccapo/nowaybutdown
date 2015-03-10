@@ -3,7 +3,7 @@ public :
 
 	Ai() {}
 	virtual ~Ai() {}
-	virtual void update(Actor *owner)=0;
+	virtual void update(Actor *owner) = 0;
 };
 
 class MonsterAi : public Ai {
@@ -31,7 +31,7 @@ public :
 
 protected :
 	bool moveOrAttack(Actor *owner, int targetx, int targety);
-	void handleActionKey(Actor *owner, int ascii);
+	void handleActionKey(Actor *owner, int ascii, int &dx, int &dy);
 	Actor *choseFromInventory(Actor *owner);
 	void helpScreen();
 };

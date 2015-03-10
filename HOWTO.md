@@ -6,10 +6,11 @@
 ## Commands
 
 * Movement: Arrow Keys or IJKL
-* Menu: Escape
+* Inventory: Escape
 * Grab: g
-* Drop: d (From Menu Only)
-* Wield: w (From Menu Only)
-* Use: Enter (From Menu Only)
+* Drop: d (From Inventory)
+* Equip: e (From Inventory)
+* Use: u (From Inventory)
+* Wield: w (From Inventory)
 * Quit: Close Window
 * Help Screen: ?

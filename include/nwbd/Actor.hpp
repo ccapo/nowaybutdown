@@ -5,6 +5,8 @@ public :
     TCODColor col; // color
 	const char *name; // the actor's name
 	bool blocks; // can we walk on this actor?
+	bool wielding; // is the actor wielding something?
+	bool wearing; // is the actor wearing something?
 	Attacker *attacker; // something that deals damages
 	Destructible *destructible; // something that can be damaged
 	Ai *ai; // something self-updating
