@@ -1,12 +1,11 @@
 #include <iostream>
 #include "libtcod.hpp"
-class Actor;
-#include "Destructible.hpp"
-#include "Attacker.hpp"
+class Object;
+#include "Entity.hpp"
 #include "Ai.hpp"
 #include "Item.hpp"
 #include "Container.hpp"
-#include "Actor.hpp"
+#include "Object.hpp"
 #include "Map.hpp"
 #include "Gui.hpp"
 #include "Engine.hpp"

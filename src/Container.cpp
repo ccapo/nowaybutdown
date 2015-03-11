@@ -7,15 +7,15 @@ Container::~Container() {
 	inventory.clearAndDelete();
 }
 
-bool Container::add(Actor *actor) {
+bool Container::add(Object *object) {
 	if ( size > 0 && inventory.size() >= size ) {
 		// inventory full
 		return false;
 	}
-	inventory.push(actor);
+	inventory.push(object);
 	return true;
 }
 
-void Container::remove(Actor *actor) {
-	inventory.remove(actor);
+void Container::remove(Object *object) {
+	inventory.remove(object);
 }

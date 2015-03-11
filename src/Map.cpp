@@ -71,20 +71,16 @@ void Map::addMonster(int x, int y) {
 	TCODRandom *rng=TCODRandom::getInstance();
     if ( rng->getInt(0,100) < 80 ) {
         // create an orc
-        Actor *orc = new Actor(x,y,256,"Orc",
-            TCODColor::white);
-        orc->destructible = new MonsterDestructible(10,0,"dead orc");
-        orc->attacker = new Attacker(3);
-        orc->ai = new MonsterAi();
-        engine.actors.push(orc);
+        Object *orc = new Object(x, y, 256, "Orc", TCODColor::white);
+        orc->entity = new CreatureEntity(10, 3, 0, "dead orc");
+        orc->entity->ai = new MonsterAi();
+        engine.objects.push(orc);
     } else {
         // create a troll
-        Actor *troll = new Actor(x,y,257,"Troll",
-             TCODColor::white);
-        troll->destructible = new MonsterDestructible(16,1,"troll carcass");
-        troll->attacker = new Attacker(4);
-        troll->ai = new MonsterAi();
-        engine.actors.push(troll);
+        Object *troll = new Object(x, y, 257, "Troll", TCODColor::white);
+        troll->entity = new CreatureEntity(16, 4, 1, "troll carcass");
+        troll->entity->ai = new MonsterAi();
+        engine.objects.push(troll);
     }
 }
 
@@ -93,32 +89,32 @@ void Map::addItem(int x, int y) {
 	int dice = rng->getInt(0,100);
 	if ( dice < 70 ) {
 		// create a health potion
-		Actor *healthPotion=new Actor(x,y,259,"health potion",
+		Object *healthPotion=new Object(x,y,259,"health potion",
 			TCODColor::white);
 		healthPotion->blocks=false;
 		healthPotion->item=new Healer(4);
-		engine.actors.push(healthPotion);
+		engine.objects.push(healthPotion);
 	} else if ( dice < 70+10 ) {
 		// create a scroll of lightning bolt 
-		Actor *scrollOfLightningBolt=new Actor(x,y,'#',"scroll of lightning bolt",
+		Object *scrollOfLightningBolt=new Object(x,y,'#',"scroll of lightning bolt",
 			TCODColor::lightYellow);
 		scrollOfLightningBolt->blocks=false;
 		scrollOfLightningBolt->item=new LightningBolt(5,20);
-		engine.actors.push(scrollOfLightningBolt);
+		engine.objects.push(scrollOfLightningBolt);
 	} else if ( dice < 70+10+10 ) {
 		// create a scroll of fireball
-		Actor *scrollOfFireball=new Actor(x,y,'#',"scroll of fireball",
+		Object *scrollOfFireball=new Object(x,y,'#',"scroll of fireball",
 			TCODColor::lightYellow);
 		scrollOfFireball->blocks=false;
 		scrollOfFireball->item=new Fireball(3,12);
-		engine.actors.push(scrollOfFireball);
+		engine.objects.push(scrollOfFireball);
 	} else {
 		// create a scroll of confusion
-		Actor *scrollOfConfusion=new Actor(x,y,'#',"scroll of confusion",
+		Object *scrollOfConfusion=new Object(x,y,'#',"scroll of confusion",
 			TCODColor::lightYellow);
 		scrollOfConfusion->blocks=false;
 		scrollOfConfusion->item=new Confuser(10,8);
-		engine.actors.push(scrollOfConfusion);
+		engine.objects.push(scrollOfConfusion);
 	}
 }
 
@@ -162,11 +158,11 @@ bool Map::canWalk(int x, int y) const {
         // this is a wall
         return false;
     }
-    for (Actor **iterator=engine.actors.begin();
-        iterator!=engine.actors.end();iterator++) {
-        Actor *actor=*iterator;
-        if ( actor->blocks && actor->x == x && actor->y == y ) {
-            // there is a blocking actor here. cannot walk
+    for (Object **iterator=engine.objects.begin();
+        iterator!=engine.objects.end();iterator++) {
+        Object *object=*iterator;
+        if ( object->blocks && object->x == x && object->y == y ) {
+            // there is a blocking object here. cannot walk
             return false;
         }
     }
@@ -239,7 +235,7 @@ void Map::render() const {
                 l = CLAMP(0.0f, 1.0f, l);
 
                 // Interpolate the colour
-                TCODColor final = engine.player->destructible->isDead() ? base : TCODColor::lerp(base, light, l);
+                TCODColor final = engine.player->entity->isDead() ? base : TCODColor::lerp(base, light, l);
 
 	            TCODConsole::root->setCharBackground(x - posx, y - posy, final );
 	        } else if ( isExplored(x,y) ) {

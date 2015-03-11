@@ -7,8 +7,8 @@ static const int TRACKING_TURNS = 3;
 
 MonsterAi::MonsterAi() : moveCount(0) {}
 
-void MonsterAi::update(Actor *owner) {
-    if ( owner->destructible && owner->destructible->isDead() ) {
+void MonsterAi::update(Object *owner) {
+    if ( owner->entity && owner->entity->isDead() ) {
     	return;
     }
 	if ( engine.map->isInFov(owner->x, owner->y) ) {
@@ -22,7 +22,7 @@ void MonsterAi::update(Actor *owner) {
    	}
 }
 
-void MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
+void MonsterAi::moveOrAttack(Object *owner, int targetx, int targety) {
 	int dx = targetx - owner->x;
 	int dy = targety - owner->y;
 	int stepdx = (dx > 0 ? 1 : -1);
@@ -39,14 +39,14 @@ void MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
 		} else if ( engine.map->canWalk(owner->x, owner->y + stepdy) ) {
 			owner->y += stepdy;
 		}
-	} else if ( owner->attacker ) {
-		owner->attacker->attack(owner, engine.player);
+	} else if ( owner->entity ) {
+		owner->entity->attack(owner, engine.player);
 	}
 }
 
-ConfusedMonsterAi::ConfusedMonsterAi(int nbTurns, Ai *oldAi) : nbTurns(nbTurns), oldAi(oldAi) {}
+ConfusedMonsterAi::ConfusedMonsterAi(int nTurns, Ai *prevAi) : nTurns(nTurns), prevAi(prevAi) {}
 
-void ConfusedMonsterAi::update(Actor *owner) {
+void ConfusedMonsterAi::update(Object *owner) {
 	TCODRandom *rng = TCODRandom::getInstance();
 	int dx = rng->getInt(-1, 1);
 	int dy = rng->getInt(-1, 1);
@@ -57,21 +57,21 @@ void ConfusedMonsterAi::update(Actor *owner) {
 			owner->x = destx;
 			owner->y = desty;
 		} else {
-			Actor *actor = engine.getActor(destx, desty);
-			if ( actor ) {
-				owner->attacker->attack(owner, actor);
+			Object *object = engine.getObject(destx, desty);
+			if ( object ) {
+				owner->entity->attack(owner, object);
 			}
 		}
 	}
-	nbTurns--;
-	if ( nbTurns == 0 ) {
-		owner->ai = oldAi;
+	nTurns--;
+	if ( nTurns == 0 ) {
+		owner->entity->ai = prevAi;
 		delete this;
 	}
 }
 
-void PlayerAi::update(Actor *owner) {
-    if ( owner->destructible && owner->destructible->isDead() ) {
+void PlayerAi::update(Object *owner) {
+    if ( owner->entity && owner->entity->isDead() ) {
     	return;
     }
 	int dx = 0, dy = 0;
@@ -82,9 +82,9 @@ void PlayerAi::update(Actor *owner) {
 		case TCODK_RIGHT : dx = 1; break;
 		case TCODK_ESCAPE : // display inventory
 		{
-			Actor *actor = choseFromInventory(owner);
-			if ( actor ) {
-				actor->item->use(actor, owner);
+			Object *object = choseFromInventory(owner);
+			if ( object ) {
+				object->item->use(object, owner);
 				engine.gameStatus = Engine::NEW_TURN;
 			}
 			break;
@@ -101,22 +101,22 @@ void PlayerAi::update(Actor *owner) {
 
 }
 
-bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
+bool PlayerAi::moveOrAttack(Object *owner, int targetx, int targety) {
 	if ( engine.map->isWall(targetx, targety) ) return false;
-	// look for living actors to attack
-	for (Actor **iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
-		Actor *actor = *iterator;
-		if ( actor->destructible && !actor->destructible->isDead() && actor->x == targetx && actor->y == targety ) {
-			owner->attacker->attack(owner, actor);
+	// look for living objects to attack
+	for (Object **iterator = engine.objects.begin(); iterator != engine.objects.end(); iterator++) {
+		Object *object = *iterator;
+		if ( object->entity && !object->entity->isDead() && object->x == targetx && object->y == targety ) {
+			owner->entity->attack(owner, object);
 			return false;
 		}
 	}
 	// look for corpses or items
-	for (Actor **iterator=engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
-		Actor *actor = *iterator;
-		bool corpseOrItem = (actor->destructible && actor->destructible->isDead()) || actor->item;
-		if ( corpseOrItem && actor->x == targetx && actor->y == targety ) {
-			engine.gui->message(TCODColor::lightGrey, "There's a %s here.", actor->name);
+	for (Object **iterator=engine.objects.begin(); iterator != engine.objects.end(); iterator++) {
+		Object *object = *iterator;
+		bool corpseOrItem = (object->entity && object->entity->isDead()) || object->item;
+		if ( corpseOrItem && object->x == targetx && object->y == targety ) {
+			engine.gui->message(TCODColor::lightGrey, "There's a %s here.", object->name);
 		}
 	}
 	owner->x = targetx;
@@ -124,7 +124,7 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
 	return true;
 }
 
-void PlayerAi::handleActionKey(Actor *owner, int ascii, int &dx, int &dy) {
+void PlayerAi::handleActionKey(Object *owner, int ascii, int &dx, int &dy) {
 	switch(ascii) {
 		case 'i' : dy = -1; break; 
 		case 'k' : dy = 1; break;
@@ -132,9 +132,9 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii, int &dx, int &dy) {
 		case 'l' : dx = 1; break;
 		//case 'd' : // drop item 
 		//{
-		//	Actor *actor = choseFromInventory(owner);
-		//	if ( actor ) {
-		//		actor->item->drop(actor, owner);
+		//	Object *object = choseFromInventory(owner);
+		//	if ( object ) {
+		//		object->item->drop(object, owner);
 		//		engine.gameStatus = Engine::NEW_TURN;
 		//	}
 		//	break;
@@ -142,12 +142,12 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii, int &dx, int &dy) {
 		case 'g' : // grab item
 		{
 			bool found=false;
-			for (Actor **iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
-				Actor *actor = *iterator;
-				if ( actor->item && actor->x == owner->x && actor->y == owner->y ) {
-					if (actor->item->grab(actor,owner)) {
+			for (Object **iterator = engine.objects.begin(); iterator != engine.objects.end(); iterator++) {
+				Object *object = *iterator;
+				if ( object->item && object->x == owner->x && object->y == owner->y ) {
+					if (object->item->grab(object,owner)) {
 						found = true;
-						engine.gui->message(TCODColor::lightGrey, "You grab the %s.", actor->name);
+						engine.gui->message(TCODColor::lightGrey, "You grab the %s.", object->name);
 						break;
 					} else if (! found) {
 						found = true;
@@ -163,10 +163,10 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii, int &dx, int &dy) {
 		}
 		//case 'w' : // wield item 
 		//{
-		//	Actor *actor=choseFromInventory(owner);
-		//	if ( actor ) {
-		//		//actor->item->drop(actor, owner);
-		//		owner->attacker->wield(actor);
+		//	Object *object=choseFromInventory(owner);
+		//	if ( object ) {
+		//		//object->item->drop(object, owner);
+		//		owner->entity->wield(object);
 		//		engine.gameStatus = Engine::NEW_TURN;
 		//	}
 		//	break;
@@ -180,10 +180,17 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii, int &dx, int &dy) {
 	}
 }
 
-Actor *PlayerAi::choseFromInventory(Actor *owner) {
+Object *PlayerAi::choseFromInventory(Object *owner) {
 	static const int INVENTORY_WIDTH = 50;
 	static const int INVENTORY_HEIGHT = 28;
 	static TCODConsole con(INVENTORY_WIDTH, INVENTORY_HEIGHT);
+	static int cursor = 0;
+
+	con.setAlignment(TCOD_LEFT);
+	con.setBackgroundFlag(TCOD_BKGND_SET);
+	con.setDefaultBackground(TCODColor::black);
+	con.setDefaultForeground(TCODColor::white);
+	con.clear();
 
 	// display the inventory frame
 	con.setDefaultForeground(TCODColor(200,180,50));
@@ -191,22 +198,31 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 
 	int y = 2;
 	con.setDefaultForeground(TCODColor::white);
-	con.print(2, y++, "%s", "Inventory Options");
-	con.hline(2, y++, 18);
-	y++;
-	con.print(2, y++, "%s", "Drop Selected Item : d");
-	con.print(2, y++, "%s", "Equip Selected Item: e");
-	con.print(2, y++, "%s", "Use Selected Item  : u");
-	con.print(2, y++, "%s", "Wield Selected Item: w");
-	con.print(2, y++, "%s", "Exit Inventory     : Escape");	
+	con.print(2, y, "%s",  "Drop : d");
+	con.print(12, y, "%s", "Use  : u");
+	con.print(22, y, "%s", "Equip: e");
+	con.print(32, y++, "%s", "Wield: w");
+	con.hline(2, y++, 46);
 
-	// display the items with their keyboard shortcut
+	// Set text colours
+	TCODConsole::setColorControl(TCOD_COLCTRL_1, TCODColor::white, TCODColor::black);
+	TCODConsole::setColorControl(TCOD_COLCTRL_2, TCODColor::white, TCODColor::lightBlue);
+	TCODConsole::setColorControl(TCOD_COLCTRL_3, TCODColor::lighterYellow, TCODColor::black);
+	TCODConsole::setColorControl(TCOD_COLCTRL_4, TCODColor::red, TCODColor::black);
+
+	// display the items with the cursor
 	con.setDefaultForeground(TCODColor::white);
-	int shortcut = 'a';
-	for (Actor **it = owner->container->inventory.begin(); it != owner->container->inventory.end(); it++) {
-		Actor *actor=*it;
-		con.print(2,y++,"(%c) %s", shortcut, actor->name);
-		shortcut++;
+	y = 5;
+	for (int i = 0; i < owner->container->inventory.size(); i++) {
+		Object *object = owner->container->inventory.get(i);
+		std::string name = "%c";
+		name.append(object->name);
+		name.append("%c");
+		if( i == cursor ) {
+			con.print(2, y++, name.c_str(), TCOD_COLCTRL_2, TCOD_COLCTRL_STOP);
+		} else {
+			con.print(2, y++, name.c_str(), TCOD_COLCTRL_3, TCOD_COLCTRL_STOP);
+		}
 	}
 
 	// blit the inventory console on the root console
@@ -217,41 +233,63 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 	TCOD_key_t key;
 	//TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS, &key, NULL, true);
 	//if ( key.vk == TCODK_CHAR ) {
-	//	int actorIndex=key.c - 'a';
-	//	if ( actorIndex >= 0 && actorIndex < owner->container->inventory.size() ) {
-	//		return owner->container->inventory.get(actorIndex);
+	//	int objectIndex=key.c - 'a';
+	//	if ( objectIndex >= 0 && objectIndex < owner->container->inventory.size() ) {
+	//		return owner->container->inventory.get(objectIndex);
 	//	}
 	//}
 	while( TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS, &key, NULL, true) ) {
-		if( key.vk == TCODK_ESCAPE ) break;
+		if( key.vk == TCODK_ESCAPE ) {
+			cursor = 0;
+			break;
+		}
 		switch( key.vk ) {
-			case TCODK_ESCAPE: break;
+			case TCODK_DOWN:
+			{
+				// Move the cursor position down
+				if( owner->container->inventory.size() > 0 ) cursor = (cursor + 1) % owner->container->inventory.size();
+				break;
+			}
+			case TCODK_UP:
+			{
+				// Move the cursor position up
+				if( owner->container->inventory.size() > 0 ) {
+					cursor--;
+					if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+				}
+				break;
+			}
 			case TCODK_CHAR: {
 				switch( key.c ) {
 					case 'd': {
-						std::cout << "Drop selected item" << std::endl;
-						//Actor *actor = owner->container->inventory.get(cursor)
-						//actor->item->drop(actor, owner);
-						//engine.gameStatus = Engine::NEW_TURN;
+						if( owner->container->inventory.size() > 0 ) {
+							Object *object = owner->container->inventory.get(cursor);
+							object->item->drop(object, owner);
+							cursor--;
+							if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+							engine.gameStatus = Engine::NEW_TURN;
+						}
 						break;
 					}
 					case 'e': {
 						std::cout << "Equip selected item" << std::endl;
-						//Actor *actor = owner->container->inventory.get(cursor);
-
+						//Object *object = owner->container->inventory.get(cursor);
 						break;
 					}
 					case 'u': {
-						std::cout << "Use selected item" << std::endl;
-						//Actor *actor = owner->container->inventory.get(cursor);
-						//actor->item->use(actor, owner);
-						//engine.gameStatus = Engine::NEW_TURN;
+						if( owner->container->inventory.size() > 0 ) {
+							Object *object = owner->container->inventory.get(cursor);
+							object->item->use(object, owner);
+							cursor--;
+							if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+							engine.gameStatus = Engine::NEW_TURN;
+						}
 						break;
 					}
 					case 'w': {
 						std::cout << "Wield selected item" << std::endl;
-						//Actor *actor = owner->container->inventory.get(cursor);
-						//actor->attacker->wield(actor, owner);
+						//Object *object = owner->container->inventory.get(cursor);
+						//object->entity->wield(object, owner);
 						//engine.gameStatus = Engine::NEW_TURN;						
 						break;
 					}
@@ -260,6 +298,40 @@ Actor *PlayerAi::choseFromInventory(Actor *owner) {
 			}
 			default: break;
 		}
+
+		con.clear();
+
+		// display the inventory frame
+		con.setDefaultForeground(TCODColor(200,180,50));
+		con.printFrame(0, 0, INVENTORY_WIDTH, INVENTORY_HEIGHT, true, TCOD_BKGND_DEFAULT, "Inventory");
+
+		y = 2;
+		con.setDefaultForeground(TCODColor::white);
+		con.print(2, y, "%s",  "Drop : d");
+		con.print(12, y, "%s", "Use  : u");
+		con.print(22, y, "%s", "Equip: e");
+		con.print(32, y++, "%s", "Wield: w");
+		con.hline(2, y++, 46);
+
+		// display the items with the cursor
+		con.setDefaultForeground(TCODColor::white);
+		y = 5;
+		for (int i = 0; i < owner->container->inventory.size(); i++) {
+			Object *object = owner->container->inventory.get(i);
+			std::string name = "%c";
+			name.append(object->name);
+			name.append("%c");
+			if( i == cursor ) {
+				con.print(2, y++, name.c_str(), TCOD_COLCTRL_2, TCOD_COLCTRL_STOP);
+			} else {
+				con.print(2, y++, name.c_str(), TCOD_COLCTRL_3, TCOD_COLCTRL_STOP);
+			}
+		}
+
+		// blit the inventory console on the root console
+		TCODConsole::blit(&con, 0, 0, INVENTORY_WIDTH, INVENTORY_HEIGHT, TCODConsole::root, engine.windowWidth/2 - INVENTORY_WIDTH/2, engine.windowHeight/2 - INVENTORY_HEIGHT/2);
+		TCODConsole::flush();
+
 	}
 	return NULL;
 }
@@ -285,9 +357,9 @@ void PlayerAi::helpScreen() {
 	con.print(2, y++, "%s", "Inventory: Escape");
 	con.print(2, y++, "%s", "Grab     : g");
 	con.print(2, y++, "%s", "Drop     : d (From Inventory)");
+	con.print(2, y++, "%s", "Use      : u (From Inventory)");
 	con.print(2, y++, "%s", "Equip    : e (From Inventory)");
 	con.print(2, y++, "%s", "Wield    : w (From Inventory)");
-	con.print(2, y++, "%s", "Use      : u (From Inventory)");
 	con.print(2, y++, "%s", "Quit     : Close Window");
 	con.print(2, y++, "%s", "Help     : ?");
 

@@ -9,8 +9,8 @@ public :
 	} gameStatus;
 	TCOD_key_t lastKey;
 	TCOD_mouse_t mouse;
-    TCODList<Actor *> actors;
-    Actor *player;
+    TCODList<Object *> objects;
+    Object *player;
     Map *map;
     int fovRadius;
     int windowWidth;
@@ -25,9 +25,9 @@ public :
     ~Engine();
     void update();
     void render();
-    void sendToBack(Actor *actor);
-    Actor *getActor(int x, int y) const;
-    Actor *getClosestMonster(int x, int y, float range) const;
+    void sendToBack(Object *object);
+    Object *getObject(int x, int y) const;
+    Object *getClosestMonster(int x, int y, float range) const;
     bool pickATile(int *x, int *y, float maxRange = 0.0f);
 };
  

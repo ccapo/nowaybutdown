@@ -2,9 +2,9 @@ class Item {
 public :
 	Item() {}
 	virtual ~Item() {}
-	bool grab(Actor *owner, Actor *wearer);
-	void drop(Actor *owner, Actor *wearer);
-	virtual bool use(Actor *owner, Actor *wearer);
+	bool grab(Object *owner, Object *object);
+	void drop(Object *owner, Object *object);
+	virtual bool use(Object *owner, Object *object);
 };
 
 class Healer : public Item {
@@ -12,27 +12,27 @@ public :
 	float amount; // how many hp
 
 	Healer(float amount);
-	bool use(Actor *owner, Actor *wearer);
+	bool use(Object *owner, Object *object);
 };
 
 class LightningBolt : public Item {
 public :
-	float range,damage;
+	float range, damage;
 	LightningBolt(float range, float damage);
-	bool use(Actor *owner, Actor *wearer);
+	bool use(Object *owner, Object *object);
 };
 
 class Confuser : public Item {
 public :
-	int nbTurns;
+	int nTurns;
 	float range;
-	Confuser(int nbTurns, float range);
-	bool use(Actor *owner, Actor *wearer);	
+	Confuser(int nTurns, float range);
+	bool use(Object *owner, Object *object);	
 };
 
 class Fireball : public LightningBolt {
 public :
 	Fireball(float range, float damage);
-	bool use(Actor *owner, Actor *wearer);		
+	bool use(Object *owner, Object *object);		
 };
 

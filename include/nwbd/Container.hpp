@@ -1,10 +1,10 @@
 class Container {
 public :
-	int size; // maximum number of actors. 0=unlimited
-	TCODList<Actor *> inventory;		
+	int size; // maximum number of objects. 0=unlimited
+	TCODList<Object *> inventory;		
 
 	Container(int size);
 	~Container();
-	bool add(Actor *actor);
-	void remove(Actor *actor);
+	bool add(Object *object);
+	void remove(Object *object);
 };

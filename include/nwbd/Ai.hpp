@@ -3,35 +3,35 @@ public :
 
 	Ai() {}
 	virtual ~Ai() {}
-	virtual void update(Actor *owner) = 0;
+	virtual void update(Object *owner) = 0;
 };
 
 class MonsterAi : public Ai {
 public :
 	MonsterAi();
-	void update(Actor *owner);
+	void update(Object *owner);
 protected :
 	int moveCount;
 
-	void moveOrAttack(Actor *owner, int targetx, int targety);
+	void moveOrAttack(Object *owner, int targetx, int targety);
 };
 
 class ConfusedMonsterAi : public Ai {
 public :
-	ConfusedMonsterAi(int nbTurns, Ai *oldAi);
-	void update(Actor *owner);
+	ConfusedMonsterAi(int nbTurns, Ai *prevAi);
+	void update(Object *owner);
 protected :
-	int nbTurns;
-	Ai *oldAi;
+	int nTurns;
+	Ai *prevAi;
 };
 
 class PlayerAi : public Ai {
 public :
-	void update(Actor *owner);
+	void update(Object *owner);
 
 protected :
-	bool moveOrAttack(Actor *owner, int targetx, int targety);
-	void handleActionKey(Actor *owner, int ascii, int &dx, int &dy);
-	Actor *choseFromInventory(Actor *owner);
+	bool moveOrAttack(Object *owner, int targetx, int targety);
+	void handleActionKey(Object *owner, int ascii, int &dx, int &dy);
+	Object *choseFromInventory(Object *owner);
 	void helpScreen();
 };

@@ -22,8 +22,8 @@ void Gui::render() {
 	con->clear();
 
 	// draw the health bar
-	renderBar(1,1,BAR_WIDTH,"HP",engine.player->destructible->hp,
-		engine.player->destructible->maxHp,
+	renderBar(1,1,BAR_WIDTH,"HP",engine.player->entity->hp,
+		engine.player->entity->hpMax,
 		TCODColor::lightRed,TCODColor::darkerRed);
 
 	// draw the message log
@@ -45,9 +45,9 @@ void Gui::render() {
 	// Cave depth
 	y = 3;
 	con->setDefaultForeground(TCODColor::white);
-	con->print(1,y++,"ATK: %d",5);
-	con->print(1,y++,"DEF: %d",5);
-	//con->print(1,y++,"SPD: %d",6);
+	con->print(1,y++,"ATK: %d",engine.player->entity->atk);
+	con->print(1,y++,"DEF: %d",engine.player->entity->def);
+	//con->print(1,y++,"SPD: %d",engine.player->entity->spd);
 	con->print(1,y++,"LVL: %d",1);
 
 	// blit the GUI console on the root console
@@ -89,19 +89,19 @@ void Gui::renderMouseLook() {
 	}
 	char buf[128]="";
 	bool first=true;
-	for (Actor **it=engine.actors.begin(); it != engine.actors.end(); it++) {
-		Actor *actor=*it;
-		// find actors under the mouse cursor
-		if (actor->x == engine.mouse.cx && actor->y == engine.mouse.cy ) {
+	for (Object **it=engine.objects.begin(); it != engine.objects.end(); it++) {
+		Object *object=*it;
+		// find objects under the mouse cursor
+		if (object->x == engine.mouse.cx && object->y == engine.mouse.cy ) {
 			if (! first) {
 				strcat(buf,", ");
 			} else {
 				first=false;
 			}
-			strcat(buf,actor->name);
+			strcat(buf,object->name);
 		}
 	}
-	// display the list of actors under the mouse cursor
+	// display the list of objects under the mouse cursor
 	con->setDefaultForeground(TCODColor::lightGrey);
 	con->print(1,0,buf);
 }

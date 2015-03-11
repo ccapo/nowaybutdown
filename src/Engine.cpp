@@ -1,23 +1,22 @@
 #include <math.h>
 #include "Main.hpp"
 
-Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadius(6),
+Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadius(8),
 	windowWidth(windowWidth),windowHeight(windowHeight),displayWidth(windowWidth),displayHeight(windowHeight - 9),
 	mapWidth(2*windowWidth),mapHeight(2*(windowHeight - 9)) {
-	TCODConsole::setCustomFont("data/fonts/arial16x16-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
-    TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.1.0",false);
+	TCODConsole::setCustomFont("data/fonts/arial8x8-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
+    TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.2.0",false);
     TCODSystem::setFps(24);
     TCODConsole::mapAsciiCodeToFont(256, 9, 10); // orc
     TCODConsole::mapAsciiCodeToFont(257, 0, 10); // troll
     TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player
 	TCODConsole::mapAsciiCodeToFont(259, 10, 8); // health potion
 	TCODConsole::mapAsciiCodeToFont(260, 18, 10); // corpse
-    player = new Actor(10,10,'@',"Player",TCODColor::white);
-    player->destructible=new PlayerDestructible(30,2,"your corpse");
-    player->attacker=new Attacker(5);
-    player->ai = new PlayerAi();
+    player = new Object(10,10,'@',"Player",TCODColor::white);
+    player->entity = new Entity(30, 5, 2, "your corpse");
+    player->entity->ai = new PlayerAi();
     player->container = new Container(26);
-    actors.push(player);
+    objects.push(player);
     map = new Map(mapWidth,mapHeight);
     gui = new Gui();
     gui->message(TCODColor::red, "You decide to venture inside the cave" );
@@ -26,7 +25,7 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
 }
 
 Engine::~Engine() {
-    actors.clearAndDelete();
+    objects.clearAndDelete();
     delete map;
     delete gui;
 }
@@ -37,11 +36,11 @@ void Engine::update() {
     TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
     player->update();
     if ( gameStatus == NEW_TURN ) {
-	    for (Actor **iterator=actors.begin(); iterator != actors.end();
+	    for (Object **iterator=objects.begin(); iterator != objects.end();
 	        iterator++) {
-	        Actor *actor=*iterator;
-	        if ( actor != player ) {
-	            actor->update();
+	        Object *object=*iterator;
+	        if ( object != player ) {
+	            object->update();
 	        }
 	    }
 	}
@@ -52,12 +51,12 @@ void Engine::render() {
 	// draw the map
 	map->moveDisplay(player->x, player->y);
 	map->render();
-	// draw the actors
-	for (Actor **iterator=actors.begin();
-	    iterator != actors.end(); iterator++) {
-		Actor *actor=*iterator;
-		if ( actor != player && map->isInFov(actor->x,actor->y) ) {
-	        actor->render();
+	// draw the objects
+	for (Object **iterator=objects.begin();
+	    iterator != objects.end(); iterator++) {
+		Object *object=*iterator;
+		if ( object != player && map->isInFov(object->x,object->y) ) {
+	        object->render();
 	    }
 	}
 	player->render();
@@ -65,35 +64,35 @@ void Engine::render() {
 	gui->render();
 }
 
-void Engine::sendToBack(Actor *actor) {
-	actors.remove(actor);
-	actors.insertBefore(actor,0);
+void Engine::sendToBack(Object *object) {
+	objects.remove(object);
+	objects.insertBefore(object,0);
 }
 
-Actor *Engine::getActor(int x, int y) const {
-	for (Actor **iterator=actors.begin();
-	    iterator != actors.end(); iterator++) {
-		Actor *actor=*iterator;
-		if ( actor->x == x && actor->y ==y && actor->destructible
-			&& ! actor->destructible->isDead()) {
-			return actor;
+Object *Engine::getObject(int x, int y) const {
+	for (Object **iterator=objects.begin();
+	    iterator != objects.end(); iterator++) {
+		Object *object=*iterator;
+		if ( object->x == x && object->y ==y && object->entity
+			&& ! object->entity->isDead()) {
+			return object;
 		}
 	}
 	return NULL;
 }
 
-Actor *Engine::getClosestMonster(int x, int y, float range) const {
-	Actor *closest=NULL;
+Object *Engine::getClosestMonster(int x, int y, float range) const {
+	Object *closest=NULL;
 	float bestDistance=1E6f;
-	for (Actor **iterator=actors.begin();
-	    iterator != actors.end(); iterator++) {
-		Actor *actor=*iterator;
-		if ( actor != player && actor->destructible 
-			&& !actor->destructible->isDead() ) {
-			float distance=actor->getDistance(x,y);
+	for (Object **iterator=objects.begin();
+	    iterator != objects.end(); iterator++) {
+		Object *object=*iterator;
+		if ( object != player && object->entity 
+			&& !object->entity->isDead() ) {
+			float distance=object->getDistance(x,y);
 			if ( distance < bestDistance && ( distance <= range || range == 0.0f ) ) {
 				bestDistance=distance;
-				closest=actor;
+				closest=object;
 			}
 		}
 	}
