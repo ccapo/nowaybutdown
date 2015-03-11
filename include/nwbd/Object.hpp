@@ -5,8 +5,6 @@ public :
     TCODColor col; // color
 	const char *name; // the object's name
 	bool blocks; // can we walk on this object?
-	bool wielding; // is the object wielding something?
-	bool wearing; // is the object wearing something?
 	Entity *entity; // Something that can interact with its environment
 	Item *item; // Something that can be used
 	Container *container; // something that can contain objects
