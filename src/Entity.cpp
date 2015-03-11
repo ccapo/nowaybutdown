@@ -3,7 +3,7 @@
 
 Entity::Entity(int hpMax, int atk, int def, const char *corpseName) :
 	baseHpMax(hpMax), hpMax(hpMax), hp(hpMax), baseAtk(atk), atk(atk), baseDef(def), def(def),
-	corpseName(corpseName), ai(NULL), wieled(NULL), worn(NULL) {
+	corpseName(corpseName), ai(NULL), wielded(NULL), worn(NULL) {
 }
 
 Entity::~Entity() {
