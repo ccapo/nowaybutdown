@@ -1,7 +1,7 @@
 class Item {
 public :
 	bool usable;
-	Item() {}
+	Item(): usable(true) {}
 	virtual ~Item() {}
 	bool grab(Object *owner, Object *object);
 	void drop(Object *owner, Object *object);
