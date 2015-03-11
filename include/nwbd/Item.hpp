@@ -1,5 +1,6 @@
 class Item {
 public :
+	bool usable;
 	Item() {}
 	virtual ~Item() {}
 	bool grab(Object *owner, Object *object);
