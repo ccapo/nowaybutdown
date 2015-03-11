@@ -11,6 +11,8 @@ public:
 	int def; // hit points deflected
 	const char *corpseName; // the object's name once dead/destroyed
 	Ai *ai; // Entity's AI
+	Object *wielded; // Wielded object
+	Object *worn; // Worn object
 
 	Entity(int hpMax, int atk, int def, const char *corpseName);
 	virtual ~Entity();
