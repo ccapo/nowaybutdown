@@ -3,12 +3,14 @@
 
 Entity::Entity(int hpMax, int atk, int def, const char *corpseName) :
 	baseHpMax(hpMax), hpMax(hpMax), hp(hpMax), baseAtk(atk), atk(atk), baseDef(def), def(def),
-	corpseName(corpseName), ai(NULL) {
+	corpseName(corpseName), ai(NULL), wieled(NULL), worn(NULL) {
 }
 
 Entity::~Entity() {
 	corpseName = NULL;
 	if ( ai ) delete ai;
+	if ( wielded ) delete wielded;
+	if ( worn ) delete worn;
 }
 
 void Entity::attack(Object *owner, Object *target) {
