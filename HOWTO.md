@@ -1,5 +1,5 @@
 # No Way But Down
-* Requirements
+* Requirements:
     * Debian Wheezy/Ubuntu 12.04+
     * Windows 7 and MINGW
 
