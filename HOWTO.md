@@ -1,7 +1,6 @@
-# No Way But Down
-* Requirements:
-    * Debian Wheezy/Ubuntu 12.04+
-    * Windows 7 and MINGW
+## Requirements:
+* Debian Wheezy/Ubuntu 12.04+
+* Windows 7 and MINGW
 
 ## Commands
 
