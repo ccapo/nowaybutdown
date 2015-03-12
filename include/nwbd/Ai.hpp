@@ -32,6 +32,6 @@ public :
 protected :
 	bool moveOrAttack(Object *owner, int targetx, int targety);
 	void handleActionKey(Object *owner, int ascii, int &dx, int &dy);
-	Object *choseFromInventory(Object *owner);
+	void choseFromInventory(Object *owner);
 	void helpScreen();
 };

@@ -5,7 +5,7 @@ static const int ROOM_MIN_SIZE = 6;
 static const int MAX_ROOM_MONSTERS = 3;
 static const int MAX_ROOM_ITEMS = 2;
 
-class BspListener : public ITCODBspCallback {
+/*class BspListener : public ITCODBspCallback {
 private :
     Map &map; // a map to dig
     int roomNum; // room number
@@ -33,15 +33,23 @@ public :
         }
         return true;
     }
-};
+};*/
 
 Map::Map(int width, int height) : width(width),height(height),display_x(0),display_y(0) {
-    tiles=new Tile[width*height];
-    map=new TCODMap(width,height);
-    TCODBsp bsp(0,0,width,height);
-    bsp.splitRecursive(NULL,8,ROOM_MAX_SIZE,ROOM_MAX_SIZE,1.5f,1.5f);
-    BspListener listener(*this);
-    bsp.traverseInvertedLevelOrder(&listener,NULL);
+	darkWall = TCODColor::darkestGrey;
+	lightWall = TCODColor(130,110,50);
+	darkGround = TCODColor::darkerGrey;
+	lightGround = TCODColor(200,180,50);
+
+    tiles = new Tile[width*height];
+    map = new TCODMap(width, height);
+
+	generateMap();
+    //TCODBsp bsp(0,0,width,height);
+    //bsp.splitRecursive(NULL,8,ROOM_MAX_SIZE,ROOM_MAX_SIZE,1.5f,1.5f);
+    //BspListener listener(*this);
+    //bsp.traverseInvertedLevelOrder(&listener,NULL);
+
 }
 
 Map::~Map() {
@@ -49,7 +57,78 @@ Map::~Map() {
     delete map;
 }
 
-void Map::dig(int x1, int y1, int x2, int y2) {
+// Builds the cave heightmap
+void Map::generateHM(TCODHeightMap *hmap) {
+	TCODRandom *rng = TCODRandom::getInstance();
+	TCODNoise *terrain = new TCODNoise(2, rng);
+	hmap->clear();
+	//        mulx  muly  addx  addy  octaves  delta  scale
+	hmap->addFbm(terrain,  8.0f,  8.0f,  0.0f,  0.0f,  8.0f,  0.0f,  1.0f);
+	hmap->normalize(0.75, 0.95);
+
+	delete terrain;
+	terrain = NULL;
+	delete rng;
+	rng = NULL;
+}
+
+// Fill (over write) all pixels that are not the fill color
+void Map::floodFill(int x, int y, TCODColor fill) {
+  // Test tile colour
+  int offset = x + width*y;
+  if( tiles[offset].colour != fill ) {
+    tiles[offset].colour = fill;
+    map->setProperties(x, y, false, false);
+
+    floodFill(x - 1, y    , fill);
+    floodFill(x + 1, y    , fill);
+    floodFill(x    , y - 1, fill);
+    floodFill(x    , y + 1, fill);
+  }
+}
+
+void Map::generateMap() {
+	TCODHeightMap *hmap = new TCODHeightMap(width, height);
+
+	generateHM(hmap);
+
+	for(int x = 0; x < width; x += width - 1) {
+		for(int y = 0; y < height; y++) {
+			int offset = x + width*y;
+			tiles[offset].colour = darkWall;
+			map->setProperties(x, y, false, false);
+		}
+	}
+
+	for(int y = 0; y < height; y += height - 1) {
+		for(int x = 0; x < width; x++) {
+			int offset = x + width*y;
+			tiles[offset].colour = darkWall;
+			map->setProperties(x, y, false, false);
+		}
+	}
+
+	for(int x = 1; x < width - 1; x++) {
+		for(int y = 1; y < height - 1; y++) {
+			int offset = x + width*y;
+			float z = hmap->getValue(x, y);
+			if( z >= 0.83 ) {
+				float coef = (z - 0.75)/(0.95 - 0.75);
+				tiles[offset].colour = TCODColor::lerp(darkWall, darkGround, coef);
+				map->setProperties(x, y, true, true);
+			} else {
+				tiles[offset].colour = darkWall;
+				map->setProperties(x, y, false, false);
+			}
+			tiles[offset].explored = false;
+		}
+	}
+
+	delete hmap;
+	hmap = NULL;
+}
+
+/*void Map::dig(int x1, int y1, int x2, int y2) {
     if ( x2 < x1 ) {
         int tmp=x2;
         x2=x1;
@@ -124,6 +203,8 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
         // put the player in the first room
         engine.player->x=(x1+x2)/2;
         engine.player->y=(y1+y2)/2;
+		engine.tunnel->x = engine.player->x + 2;
+		engine.tunnel->y = engine.player->y + 2;
     } else {
 		TCODRandom *rng=TCODRandom::getInstance();
 		// add monsters
@@ -147,7 +228,7 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
 		    nbItems--;
 		}
     }
-}
+}*/
 
 bool Map::isWall(int x, int y) const {
     return !map->isWalkable(x,y);
@@ -205,15 +286,13 @@ void Map::moveDisplay(int x, int y)
 }
 
 void Map::render() const {
-    static const TCODColor darkWall = TCODColor::darkestGrey;
-    static const TCODColor lightWall = TCODColor(130,110,50);
-    static const TCODColor darkGround = TCODColor::darkerGrey;
-    static const TCODColor lightGround = TCODColor(200,180,50);
     int posx = display_x, posy = display_y;
 
     // Torch intensity variation
     TCODRandom *rng=TCODRandom::getInstance();
-    float ti = rng->getFloat(-0.15f,0.15f); 
+    float ti = rng->getFloat(-0.15f,0.15f);
+
+	TCODConsole::root->setDefaultBackground(TCODColor::darkestGrey);
 
 	for (int x=posx; x < engine.displayWidth + posx + 1; x++) {
 	    for (int y=posy; y < engine.displayHeight + posy + 1; y++) {
@@ -221,11 +300,12 @@ void Map::render() const {
             float dx = static_cast<float>(x - engine.player->x);
             float dy = static_cast<float>(y - engine.player->y);
             float dr2 = dx*dx + dy*dy;
+			int offset = x + width*y;
 
 	        if ( isInFov(x,y) ) {
 
                 // Torch flickering FX
-                TCODColor base = isWall(x,y) ? darkWall : darkGround;
+                TCODColor base = tiles[offset].colour;
                 TCODColor light = isWall(x,y) ? lightWall : lightGround;
 
                 // l = 1.0 at player position, 0.0 at a radius of TORCH_RADIUS cells
@@ -239,7 +319,7 @@ void Map::render() const {
 
 	            TCODConsole::root->setCharBackground(x - posx, y - posy, final );
 	        } else if ( isExplored(x,y) ) {
-	            TCODConsole::root->setCharBackground(x - posx, y - posy, isWall(x,y) ? darkWall : darkGround );
+	            TCODConsole::root->setCharBackground(x - posx, y - posy, tiles[offset].colour);
 	        }
    	    }
 	}

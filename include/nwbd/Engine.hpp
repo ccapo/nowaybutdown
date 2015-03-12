@@ -11,6 +11,7 @@ public :
 	TCOD_mouse_t mouse;
     TCODList<Object *> objects;
     Object *player;
+	Object *tunnel;
     Map *map;
     int fovRadius;
     int windowWidth;
@@ -19,11 +20,14 @@ public :
     int displayHeight;
     int mapWidth;
     int mapHeight;
+	int playerHP;
+	int playerATK;
+	int playerDEF;
     Gui *gui;
 
     Engine(int windowWidth, int windowHeight);
     ~Engine();
-    void update();
+    bool update();
     void render();
     void sendToBack(Object *object);
     Object *getObject(int x, int y) const;

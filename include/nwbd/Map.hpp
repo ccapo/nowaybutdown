@@ -1,16 +1,21 @@
 #define NGOALS 2 // Only two goals for now
 
 struct Tile {
-    bool explored;            // Has the player already seen this tile ?
-    double goals[NGOALS];     // Goal values
-    double goalsPrev[NGOALS]; // Previous Goal values
-    Tile() : explored(false), goals{0.0, 0.0}, goalsPrev{0.0, 0.0} {}
+    bool explored;				// Has the player already seen this tile ?
+	TCODColor colour;			// Tile colour
+    double goals[NGOALS];		// Goal values
+    double goalsPrev[NGOALS];	// Previous Goal values
+    Tile() : explored(false), colour(TCODColor::darkestGrey), goals{0.0, 0.0}, goalsPrev{0.0, 0.0} {}
 };
  
 class Map {
 public :
-    int width,height;
-    int display_x, display_y;
+	int width,height;
+	int display_x, display_y;
+	TCODColor darkWall;
+	TCODColor lightWall;
+	TCODColor darkGround;
+	TCODColor lightGround;
  
     Map(int width, int height);
     ~Map();
@@ -24,10 +29,14 @@ public :
 protected :
     Tile *tiles;
     TCODMap *map;
-    friend class BspListener;
+    //friend class BspListener;
+
+	void floodFill(int x, int y, TCODColor fill); // Fill pixels that aren't the fill colour
+	void generateHM(TCODHeightMap *hmap);         // Generates a height map
+	void generateMap();                           // Generates a map
  
-    void dig(int x1, int y1, int x2, int y2);
-    void createRoom(bool first, int x1, int y1, int x2, int y2);
-    void addMonster(int x, int y);
-    void addItem(int x, int y);
+    //void dig(int x1, int y1, int x2, int y2);
+    //void createRoom(bool first, int x1, int y1, int x2, int y2);
+    //void addMonster(int x, int y);
+    //void addItem(int x, int y);
 };

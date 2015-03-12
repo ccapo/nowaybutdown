@@ -14,8 +14,7 @@ void Item::drop(Object *owner, Object *object) {
 		engine.objects.push(owner);
 		owner->x=object->x;
 		owner->y=object->y;
-		engine.gui->message(TCODColor::lightGrey,"%s drops a %s.",
-			object->name,owner->name);
+		engine.gui->message(TCODColor::lightGrey,"%s drops a %s.", object->name,owner->name);
 	}
 }
 
@@ -33,8 +32,9 @@ Healer::Healer(float amount) : amount(amount) {
 
 bool Healer::use(Object *owner, Object *object) {
 	if ( object->entity ) {
-		float amountHealed = object->entity->heal(amount);
+		int amountHealed = object->entity->heal(amount);
 		if ( amountHealed > 0 ) {
+			engine.gui->message(TCODColor::lightGrey, "You consume a potion that increased your HP by %d", amountHealed);
 			return Item::use(owner,object);
 		}
 	}

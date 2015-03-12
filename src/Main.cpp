@@ -3,8 +3,9 @@
 Engine engine(80,49);
 
 int main() {
-    while ( !TCODConsole::isWindowClosed() ) {
-    	engine.update();
+	bool status = true;
+    while ( status && !TCODConsole::isWindowClosed() ) {
+    	status = engine.update();
     	engine.render();
 		TCODConsole::flush();    
     }
