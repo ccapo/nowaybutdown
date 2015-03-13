@@ -1,40 +1,5 @@
 #include "Main.hpp"
 
-static const int ROOM_MAX_SIZE = 12;
-static const int ROOM_MIN_SIZE = 6;
-static const int MAX_ROOM_MONSTERS = 3;
-static const int MAX_ROOM_ITEMS = 2;
-
-/*class BspListener : public ITCODBspCallback {
-private :
-    Map &map; // a map to dig
-    int roomNum; // room number
-    int lastx,lasty; // center of the last room
-public :
-    BspListener(Map &map) : map(map), roomNum(0) {}
-    bool visitNode(TCODBsp *node, void *userData) {
-    	if ( node->isLeaf() ) {    
-    		int x,y,w,h;
-			// dig a room
-			TCODRandom *rng=TCODRandom::getInstance();
-			w=rng->getInt(ROOM_MIN_SIZE, node->w-2);
-			h=rng->getInt(ROOM_MIN_SIZE, node->h-2);
-			x=rng->getInt(node->x+1, node->x+node->w-w-1);
-			y=rng->getInt(node->y+1, node->y+node->h-h-1);
-			map.createRoom(roomNum == 0, x, y, x+w-1, y+h-1);
-			if ( roomNum != 0 ) {
-			    // dig a corridor from last room
-			    map.dig(lastx,lasty,x+w/2,lasty);
-			    map.dig(x+w/2,lasty,x+w/2,y+h/2);
-			}
-            lastx=x+w/2;
-            lasty=y+h/2;
-            roomNum++;
-        }
-        return true;
-    }
-};*/
-
 Map::Map(int width, int height) : width(width),height(height),display_x(0),display_y(0) {
 	darkWall = TCODColor::darkestGrey;
 	lightWall = TCODColor(130,110,50);
@@ -43,13 +8,6 @@ Map::Map(int width, int height) : width(width),height(height),display_x(0),displ
 
     tiles = new Tile[width*height];
     map = new TCODMap(width, height);
-
-	generateMap();
-    //TCODBsp bsp(0,0,width,height);
-    //bsp.splitRecursive(NULL,8,ROOM_MAX_SIZE,ROOM_MAX_SIZE,1.5f,1.5f);
-    //BspListener listener(*this);
-    //bsp.traverseInvertedLevelOrder(&listener,NULL);
-
 }
 
 Map::~Map() {
@@ -65,11 +23,6 @@ void Map::generateHM(TCODHeightMap *hmap) {
 	//        mulx  muly  addx  addy  octaves  delta  scale
 	hmap->addFbm(terrain,  8.0f,  8.0f,  0.0f,  0.0f,  8.0f,  0.0f,  1.0f);
 	hmap->normalize(0.75, 0.95);
-
-	delete terrain;
-	terrain = NULL;
-	delete rng;
-	rng = NULL;
 }
 
 // Fill (over write) all pixels that are not the fill color
@@ -87,12 +40,13 @@ void Map::floodFill(int x, int y, TCODColor fill) {
   }
 }
 
-void Map::generateMap() {
+// Prepare a map
+void Map::prepareMap() {
 	TCODHeightMap *hmap = new TCODHeightMap(width, height);
 
 	generateHM(hmap);
 
-	for(int x = 0; x < width; x += width - 1) {
+	for(int x = 0; x < 1; x++) {
 		for(int y = 0; y < height; y++) {
 			int offset = x + width*y;
 			tiles[offset].colour = darkWall;
@@ -100,7 +54,15 @@ void Map::generateMap() {
 		}
 	}
 
-	for(int y = 0; y < height; y += height - 1) {
+	for(int x = width - 2; x < width; x++) {
+		for(int y = 0; y < height; y++) {
+			int offset = x + width*y;
+			tiles[offset].colour = darkWall;
+			map->setProperties(x, y, false, false);
+		}
+	}
+
+	for(int y = 0; y < 1; y++) {
 		for(int x = 0; x < width; x++) {
 			int offset = x + width*y;
 			tiles[offset].colour = darkWall;
@@ -108,8 +70,16 @@ void Map::generateMap() {
 		}
 	}
 
-	for(int x = 1; x < width - 1; x++) {
-		for(int y = 1; y < height - 1; y++) {
+	for(int y = height - 2; y < height; y++) {
+		for(int x = 0; x < width; x++) {
+			int offset = x + width*y;
+			tiles[offset].colour = darkWall;
+			map->setProperties(x, y, false, false);
+		}
+	}
+
+	for(int x = 1; x < width - 2; x++) {
+		for(int y = 1; y < height - 2; y++) {
 			int offset = x + width*y;
 			float z = hmap->getValue(x, y);
 			if( z >= 0.83 ) {
@@ -123,30 +93,76 @@ void Map::generateMap() {
 			tiles[offset].explored = false;
 		}
 	}
-
-	delete hmap;
-	hmap = NULL;
 }
 
-/*void Map::dig(int x1, int y1, int x2, int y2) {
-    if ( x2 < x1 ) {
-        int tmp=x2;
-        x2=x1;
-        x1=tmp;
-    }
-    if ( y2 < y1 ) {
-        int tmp=y2;
-        y2=y1;
-        y1=tmp;
-    }
-    for (int tilex=x1; tilex <= x2; tilex++) {
-        for (int tiley=y1; tiley <= y2; tiley++) {
-            map->setProperties(tilex,tiley,true,true);
+// Generate a map
+void Map::generateMap(int &px, int &py, int &dx, int &dy) {
+	TCODRandom *rng = TCODRandom::getInstance();
+	TCODDijkstra *dijkstra;
+	int nWalkable = 0;
+	float fWalkable = 0.0f;
+
+	while( fWalkable < 0.4f ) {
+		// Prepare a new cave map
+		prepareMap();
+
+		// Pick the starting location of the player
+        px = rng->getInt(2, width - 3);
+        py = rng->getInt(2, height - 3);
+		while( isWall(px, py) ) {
+			px = rng->getInt(2, width - 3);
+			py = rng->getInt(2, height - 3);
         }
+
+        dijkstra = new TCODDijkstra(map);  // allocate the path
+        dijkstra->compute(px, py);    // calculate distance from (px, py) to all other nodes
+        nWalkable = 0;
+
+		for(int x = 1; x < width - 2; x++) {
+			for(int y = 1; y < height - 2; y++) {
+				if( !isWall(x, y) ) {
+					if( !dijkstra->setPath(x, y) ) {
+						floodFill(x, y, darkWall);
+					} else {
+						nWalkable++;
+					}
+				}
+			}
+		}
+		fWalkable = static_cast<float>(nWalkable)/static_cast<float>(width*height);
+		delete dijkstra;
+	}
+
+	// Assign the location of the tunnel, ensuring they are sufficiently far apart
+	dx = rng->getInt(2, width - 3);
+	dy = rng->getInt(2, height - 3);
+	while( isWall(dx, dy) && ( pow(dx - px, 2) + pow(dy - py, 2) < 8000 ) ) {
+		dx = rng->getInt(2, width - 3);
+		dy = rng->getInt(2, height - 3);
+	}
+
+	for(int i = 0; i < 12; i++) {
+		int qx = rng->getInt(2, width - 3);
+		int qy = rng->getInt(2, height - 3);
+		while( isWall(qx, qy) && ( pow(qx - px, 2) + pow(qy - py, 2) < 100 ) && ( pow(qx - dx, 2) + pow(qy - dy, 2) < 100 ) ) {
+			qx = rng->getInt(2, width - 3);
+			qy = rng->getInt(2, height - 3);
+      }
+      addItem(qx, qy);
+    }
+
+	for(int i = 0; i < 24; i++) {
+		int qx = rng->getInt(2, width - 3);
+		int qy = rng->getInt(2, height - 3);
+		while( isWall(qx, qy) && ( pow(qx - px, 2) + pow(qy - py, 2) < 100 ) && ( pow(qx - dx, 2) + pow(qy - dy, 2) < 100 ) ) {
+			qx = rng->getInt(2, width - 3);
+			qy = rng->getInt(2, height - 3);
+      }
+      addCreature(qx, qy);
     }
 }
 
-void Map::addMonster(int x, int y) {
+void Map::addCreature(int x, int y) {
 	TCODRandom *rng=TCODRandom::getInstance();
     if ( rng->getInt(0,100) < 80 ) {
         // create an orc
@@ -168,70 +184,33 @@ void Map::addItem(int x, int y) {
 	int dice = rng->getInt(0,100);
 	if ( dice < 70 ) {
 		// create a health potion
-		Object *healthPotion=new Object(x,y,259,"health potion",
-			TCODColor::white);
+		Object *healthPotion=new Object(x,y,259,"health potion", TCODColor::white);
 		healthPotion->blocks=false;
 		healthPotion->item=new Healer(4);
 		engine.objects.push(healthPotion);
 	} else if ( dice < 70+10 ) {
 		// create a scroll of lightning bolt 
-		Object *scrollOfLightningBolt=new Object(x,y,'#',"scroll of lightning bolt",
-			TCODColor::lightYellow);
+		Object *scrollOfLightningBolt=new Object(x,y,'#',"scroll of lightning", TCODColor::lightYellow);
 		scrollOfLightningBolt->blocks=false;
 		scrollOfLightningBolt->item=new LightningBolt(5,20);
 		engine.objects.push(scrollOfLightningBolt);
 	} else if ( dice < 70+10+10 ) {
 		// create a scroll of fireball
-		Object *scrollOfFireball=new Object(x,y,'#',"scroll of fireball",
-			TCODColor::lightYellow);
+		Object *scrollOfFireball=new Object(x,y,'#',"scroll of fire", TCODColor::lightYellow);
 		scrollOfFireball->blocks=false;
 		scrollOfFireball->item=new Fireball(3,12);
 		engine.objects.push(scrollOfFireball);
 	} else {
 		// create a scroll of confusion
-		Object *scrollOfConfusion=new Object(x,y,'#',"scroll of confusion",
-			TCODColor::lightYellow);
+		Object *scrollOfConfusion=new Object(x,y,'#',"scroll of ice", TCODColor::lightYellow);
 		scrollOfConfusion->blocks=false;
 		scrollOfConfusion->item=new Confuser(10,8);
 		engine.objects.push(scrollOfConfusion);
 	}
 }
 
-void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
-    dig (x1,y1,x2,y2);
-    if ( first ) {
-        // put the player in the first room
-        engine.player->x=(x1+x2)/2;
-        engine.player->y=(y1+y2)/2;
-		engine.tunnel->x = engine.player->x + 2;
-		engine.tunnel->y = engine.player->y + 2;
-    } else {
-		TCODRandom *rng=TCODRandom::getInstance();
-		// add monsters
-		int nbMonsters=rng->getInt(0,MAX_ROOM_MONSTERS);
-		while (nbMonsters > 0) {
-		    int x=rng->getInt(x1,x2);
-		    int y=rng->getInt(y1,y2);
-    		if ( canWalk(x,y) ) {
-				addMonster(x,y);
-			}
-		    nbMonsters--;
-		}
-		// add items
-		int nbItems=rng->getInt(0,MAX_ROOM_ITEMS);
-		while (nbItems > 0) {
-		    int x=rng->getInt(x1,x2);
-		    int y=rng->getInt(y1,y2);
-    		if ( canWalk(x,y) ) {
-				addItem(x,y);
-			}
-		    nbItems--;
-		}
-    }
-}*/
-
 bool Map::isWall(int x, int y) const {
-    return !map->isWalkable(x,y);
+    return !map->isWalkable(x, y);
 }
 
 bool Map::canWalk(int x, int y) const {
@@ -239,8 +218,7 @@ bool Map::canWalk(int x, int y) const {
         // this is a wall
         return false;
     }
-    for (Object **iterator=engine.objects.begin();
-        iterator!=engine.objects.end();iterator++) {
+    for (Object **iterator=engine.objects.begin(); iterator!=engine.objects.end();iterator++) {
         Object *object=*iterator;
         if ( object->blocks && object->x == x && object->y == y ) {
             // there is a blocking object here. cannot walk

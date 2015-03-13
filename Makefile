@@ -3,8 +3,8 @@ INCDIR = include
 LIBDIR = lib
 CPP = g++
 
-CFLAGS = -O2 -s -w -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
-#CFLAGS = -O0 -g -Wall -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
+#CFLAGS = -O2 -s -w -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
+CFLAGS = -O0 -g -Wall -std=c++11 -I$(INCDIR)/nwbd -I$(INCDIR)/tcod
 
 # Determine if operating system is 32-bit or 64-bit
 ifeq ($(shell uname -m),x86_64)

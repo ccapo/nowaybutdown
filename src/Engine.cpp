@@ -6,24 +6,38 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
 	mapWidth(2*windowWidth),mapHeight(2*(windowHeight - 9)), playerHP(30), playerATK(5), playerDEF(2) {
 	TCODConsole::setCustomFont("data/fonts/arial8x8-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
     TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.2.0",false);
-    TCODSystem::setFps(24);
+	int fpsMax = 24, initialDelay = 100, interval = 1000/MAX(10,fpsMax);
+    TCODSystem::setFps(fpsMax);
+	TCODConsole::setKeyboardRepeat(initialDelay, interval);
+	TCODMouse::showCursor(true);
     TCODConsole::mapAsciiCodeToFont(256, 9, 10); // orc
     TCODConsole::mapAsciiCodeToFont(257, 0, 10); // troll
     TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player
 	TCODConsole::mapAsciiCodeToFont(259, 10, 8); // health potion
 	TCODConsole::mapAsciiCodeToFont(260, 18, 10); // corpse
-    player = new Object(10,10,'@',"Player",TCODColor::white);
+    player = new Object(10, 10, '@', "Player", TCODColor::white);
     player->entity = new PlayerEntity(playerHP, playerATK, playerDEF, "your corpse");
     player->entity->ai = new PlayerAi();
     player->container = new Container(24);
-    objects.push(player);
-	TCODRandom *rng=TCODRandom::getInstance();
-	int ix = rng->getInt(3, mapWidth - 4), iy = rng->getInt(3, mapHeight - 4);
+
 	tunnel = new Object(10, 10, '>', "tunnel down", TCODColor::white);
 	tunnel->blocks = false;
     tunnel->entity = new Entity(0, 0, 0, "a tunnel down");
+
+    map = new Map(mapWidth, mapHeight);
+
+	int px, py, dx, dy;
+	map->generateMap(px, py, dx, dy);
+	std::cout << "px, uy = " << px << ", " << py << std::endl;
+	std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
+	player->x = px;
+	player->y = py;
+	tunnel->x = dx;
+	tunnel->y = dy;
+
+    objects.push(player);
 	objects.push(tunnel);
-    map = new Map(mapWidth,mapHeight);
+
     gui = new Gui();
     gui->message(TCODColor::red, "You decide to venture inside the cave" );
 	gui->message(TCODColor::red, "Only to have the opening collapse behind you!" );
@@ -40,7 +54,6 @@ bool Engine::update() {
 	static const int DIALOG_WIDTH = 40;
 	static const int DIALOG_HEIGHT = 20;
 	static TCODConsole con(DIALOG_WIDTH, DIALOG_HEIGHT);
-	static int cursor = 0;
 
 	if ( gameStatus == STARTUP ) map->computeFov();
 

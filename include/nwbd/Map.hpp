@@ -26,17 +26,15 @@ public :
     void computeFov();
     void moveDisplay(int x, int y);
     void render() const;
+	void generateMap(int &upx, int &upy, int &downx, int &downy);                           // Generates a map
 protected :
     Tile *tiles;
     TCODMap *map;
-    //friend class BspListener;
 
 	void floodFill(int x, int y, TCODColor fill); // Fill pixels that aren't the fill colour
 	void generateHM(TCODHeightMap *hmap);         // Generates a height map
-	void generateMap();                           // Generates a map
- 
-    //void dig(int x1, int y1, int x2, int y2);
-    //void createRoom(bool first, int x1, int y1, int x2, int y2);
-    //void addMonster(int x, int y);
-    //void addItem(int x, int y);
+	void prepareMap();                            // Prepares a map
+
+    void addCreature(int x, int y);
+    void addItem(int x, int y);
 };

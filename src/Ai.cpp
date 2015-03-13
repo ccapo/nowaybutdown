@@ -76,11 +76,32 @@ void PlayerAi::update(Object *owner) {
     	return;
     }
 	int dx = 0, dy = 0;
+
 	switch(engine.lastKey.vk) {
-		case TCODK_UP : dy = -1; break;
-		case TCODK_DOWN : dy = 1; break;
-		case TCODK_LEFT : dx = -1; break;
-		case TCODK_RIGHT : dx = 1; break;
+		case TCODK_UP: {
+			dy = -1;
+			if( TCODConsole::isKeyPressed(TCODK_LEFT) ) dx = -1;
+			if( TCODConsole::isKeyPressed(TCODK_RIGHT) ) dx = 1;
+			break;
+		}
+		case TCODK_DOWN: {
+			dy = 1;
+			if( TCODConsole::isKeyPressed(TCODK_LEFT) ) dx = -1;
+			if( TCODConsole::isKeyPressed(TCODK_RIGHT) ) dx = 1;
+			break;
+		}
+		case TCODK_LEFT: {
+			dx = -1;
+			if( TCODConsole::isKeyPressed(TCODK_UP) ) dy = -1;
+			if( TCODConsole::isKeyPressed(TCODK_DOWN) ) dy = 1;
+			break;
+		}
+		case TCODK_RIGHT: {
+			dx = 1;
+			if( TCODConsole::isKeyPressed(TCODK_UP) ) dy = -1;
+			if( TCODConsole::isKeyPressed(TCODK_DOWN) ) dy = 1;
+			break;
+		}
 		case TCODK_ENTER :
 		{
 			// We have to go deeper!
@@ -133,10 +154,6 @@ bool PlayerAi::moveOrAttack(Object *owner, int targetx, int targety) {
 
 void PlayerAi::handleActionKey(Object *owner, int ascii, int &dx, int &dy) {
 	switch(ascii) {
-		case 'i' : dy = -1; break; 
-		case 'k' : dy = 1; break;
-		case 'j' : dx = -1; break;
-		case 'l' : dx = 1; break;
 		case 'g' : // grab item
 		{
 			bool found=false;
@@ -340,7 +357,7 @@ void PlayerAi::helpScreen() {
 	y++;
 
 	// content of help screen
-	con.print(2, y++, "%s", "Movement : Arrow Keys or IJKL");
+	con.print(2, y++, "%s", "Movement : Arrow Keys");
 	con.print(2, y++, "%s", "Inventory: Escape");
 	con.print(2, y++, "%s", "Grab     : g");
 	con.print(2, y++, "%s", "Drop     : d (From Inventory)");

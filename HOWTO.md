@@ -5,7 +5,7 @@
 
 ## Commands
 
-* Movement: Arrow Keys or IJKL
+* Movement: Arrow Keys
 * Inventory: Escape
 * Grab: g
 * Drop: d (From Inventory)
