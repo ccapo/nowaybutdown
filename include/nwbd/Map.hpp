@@ -20,6 +20,7 @@ public :
     Map(int width, int height);
     ~Map();
     bool isWall(int x, int y) const;
+	bool isNotWalkable(int x, int y) const;
 	bool isInFov(int x, int y) const;
     bool isExplored(int x, int y) const;
     bool canWalk(int x, int y) const;
@@ -28,13 +29,14 @@ public :
     void render() const;
 	void generateMap(int &upx, int &upy, int &downx, int &downy);                           // Generates a map
 protected :
-    Tile *tiles;
-    TCODMap *map;
+	Tile *tiles;
+	TCODMap *map;
 
 	void floodFill(int x, int y, TCODColor fill); // Fill pixels that aren't the fill colour
 	void generateHM(TCODHeightMap *hmap);         // Generates a height map
 	void prepareMap();                            // Prepares a map
 
-    void addCreature(int x, int y);
-    void addItem(int x, int y);
+	void addCreature(int x, int y);
+	void addItem(int x, int y);
+    void addEquipment(int x, int y);
 };

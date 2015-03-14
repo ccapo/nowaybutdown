@@ -12,8 +12,8 @@ void Item::drop(Object *owner, Object *object) {
 	if ( object->container ) {
 		object->container->remove(owner);
 		engine.objects.push(owner);
-		owner->x=object->x;
-		owner->y=object->y;
+		owner->x = object->x;
+		owner->y = object->y;
 		engine.gui->message(TCODColor::lightGrey,"%s drops a %s.", object->name,owner->name);
 	}
 }
@@ -27,44 +27,131 @@ bool Item::use(Object *owner, Object *object) {
 	return false;
 }
 
-Healer::Healer(float amount) : amount(amount) {
+bool Item::equip(Object *owner, Object *object) {
+	if ( owner->entity ) {
+		object->entity->worn = owner;
+		return true;
+	}
+	return false;
 }
 
-bool Healer::use(Object *owner, Object *object) {
+bool Item::wield(Object *owner, Object *object) {
+	if ( owner->entity ) {
+		object->entity->wielded = owner;
+		return true;
+	}
+	return false;
+}
+
+bool Potion::use(Object *owner, Object *object) {
 	if ( object->entity ) {
-		int amountHealed = object->entity->heal(amount);
-		if ( amountHealed > 0 ) {
-			engine.gui->message(TCODColor::lightGrey, "You consume a potion that increased your HP by %d", amountHealed);
-			return Item::use(owner,object);
+		switch( type ) {
+			case HEAL: {
+				int netAmount = object->entity->heal(amount);
+				if( netAmount > 0 ) {
+					engine.gui->message(TCODColor::lightGrey, "You consume a health potion that increased your HP by %d", netAmount);
+					return Item::use(owner,object);
+				}
+				break;
+			}
+			case ATK: {
+				object->entity->atk += amount;
+				engine.gui->message(TCODColor::lightGrey, "You consume an attack potion that increased your ATK by %d", amount);
+				return Item::use(owner,object);
+				break;
+			}
+			case DEF: {
+				object->entity->def += amount;
+				engine.gui->message(TCODColor::lightGrey, "You consume a defense potion that increased your DEF by %d", amount);
+				return Item::use(owner,object);
+				break;
+			}
+			case UNKNOWN: {
+				TCODRandom *rng = TCODRandom::getInstance();
+				int potion = rng->getInt(HEAL, DEF);
+				switch( potion ) {
+					case HEAL: {
+						int netAmount = object->entity->heal(amount);
+						if( netAmount != 0 ) {
+							std::string msg;
+							if( netAmount > 0 ) {
+								msg = "You consume a health potion that increased your HP by %d";
+							} else {
+								msg = "You consume a poison potion that decreased your HP by %d";
+							}
+							engine.gui->message(TCODColor::lightGrey, msg.c_str(), abs(netAmount));
+							return Item::use(owner,object);
+						}
+						break;
+					}
+					case ATK: {
+						object->entity->atk += amount;
+						if( object->entity->atk < 0 ) object->entity->atk = 0;
+						if( amount != 0 ) {
+							std::string msg;
+							if( amount > 0 ) {
+								msg = "You consume an attack potion that increased your ATK by %d";
+							} else {
+								msg = "You consume an attack potion that decreased your ATK by %d";
+							}
+							engine.gui->message(TCODColor::lightGrey, msg.c_str(), abs(amount));
+							return Item::use(owner,object);
+						}
+						break;
+					}
+					case DEF: {
+						object->entity->def += amount;
+						if( object->entity->def < 0 ) object->entity->def = 0;
+						if( amount != 0 ) {
+							std::string msg;
+							if( amount > 0 ) {
+								msg = "You consume an defense potion that increased your DEF by %d";
+							} else {
+								msg = "You consume an defense potion that decreased your DEF by %d";
+							}
+							engine.gui->message(TCODColor::lightGrey, msg.c_str(), abs(amount));
+							return Item::use(owner,object);
+						}
+						break;
+					}
+					default: break;
+				}
+				break;
+			}
+			default: break;
 		}
 	}
 	return false;
 }
 
-LightningBolt::LightningBolt(float range, float damage) 
-	: range(range),damage(damage) {
-}
+bool Equipment::equip(Object *owner, Object *object) {
+	if ( owner->entity ) {
+		std::cout << "Equipped: " << owner->name << std::endl;
+		object->entity->worn = owner;
 
-bool LightningBolt::use(Object *owner, Object *object) {
-	Object *closestMonster=engine.getClosestMonster(object->x,object->y,range);
-	if (! closestMonster ) {
-		engine.gui->message(TCODColor::lightGrey,"No enemy is close enough to strike.");
-		return false;
+		object->entity->hpMax += owner->entity->hp;
+		object->entity->hp += owner->entity->hp;
+		object->entity->atk += owner->entity->atk;
+		object->entity->def += owner->entity->def;
+		return true;
 	}
-	// hit closest monster for <damage> hit points
-	engine.gui->message(TCODColor::lightBlue,
-		"A lighting bolt strikes the %s with a loud thunder!\n"
-		"The damage is %g hit points.",
-		closestMonster->name,damage);
-	closestMonster->entity->damage(closestMonster,damage);
-	return Item::use(owner,object);
+	return false;
 }
 
-Confuser::Confuser(int nTurns, float range)
-	: nTurns(nTurns), range(range) {
+bool Equipment::wield(Object *owner, Object *object) {
+	if ( owner->entity ) {
+		object->entity->wielded = owner;
+
+		object->entity->hpMax += owner->entity->hp;
+		object->entity->hp += owner->entity->hp;
+		object->entity->atk += owner->entity->atk;
+		object->entity->def += owner->entity->def;
+		return true;
+	}
+	return false;
 }
 
-bool Confuser::use(Object *owner, Object *object) {
+/*bool Confuser::use(Object *owner, Object *object) {
 	engine.gui->message(TCODColor::cyan, "Left-click an enemy to confuse it,\nor right-click to cancel.");
 	int x,y;
 	if (! engine.pickATile(&x,&y,range)) {
@@ -81,30 +168,4 @@ bool Confuser::use(Object *owner, Object *object) {
 	engine.gui->message(TCODColor::lightGreen,"The eyes of the %s look vacant,\nas he starts to stumble around!",
 		object->name);
 	return Item::use(owner,obj);
-}
-
-Fireball::Fireball(float range, float damage)
-	: LightningBolt(range,damage) {		
-}
-
-bool Fireball::use(Object *owner, Object *object) {
-	engine.gui->message(TCODColor::cyan, "Left-click a target tile for the fireball,\nor right-click to cancel.");
-	int x,y;
-	if (! engine.pickATile(&x,&y)) {
-		return false;
-	}
-	// burn everything in <range> (including player)
-	engine.gui->message(TCODColor::orange,"The fireball explodes, burning everything within %g tiles!",range);
-	for (Object **iterator=engine.objects.begin();
-	    iterator != engine.objects.end(); iterator++) {
-		Object *object=*iterator;
-		if ( object->entity && !object->entity->isDead()
-			&& object->getDistance(x,y) <= range) {
-			engine.gui->message(TCODColor::orange,"The %s gets burned for %g hit points.",
-				object->name,damage);
-			object->entity->damage(object,damage);
-		}
-	}
-	return Item::use(owner,object);
-}
-
+}*/

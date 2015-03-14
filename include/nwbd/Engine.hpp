@@ -11,7 +11,7 @@ public :
 	TCOD_mouse_t mouse;
     TCODList<Object *> objects;
     Object *player;
-	Object *tunnel;
+	Object *stairs;
     Map *map;
     int fovRadius;
     int windowWidth;
@@ -20,9 +20,8 @@ public :
     int displayHeight;
     int mapWidth;
     int mapHeight;
-	int playerHP;
-	int playerATK;
-	int playerDEF;
+    int level;
+    bool restart;
     Gui *gui;
 
     Engine(int windowWidth, int windowHeight);

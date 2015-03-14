@@ -64,10 +64,15 @@ void Entity::dequip(Object *object) {
 
 void Entity::die(Object *owner) {
 	// transform the object into a corpse!
-	owner->ch = 260;
+	owner->ch = CHAR_SKULL;
 	owner->col = TCODColor::white;	
 	owner->name = corpseName;
 	owner->blocks = false;
+	delete owner->entity->ai;
+	owner->entity->ai = NULL;
+	delete owner->entity;
+	owner->entity = NULL;
+	owner->item = new Equipment(0, 0, 1, 0);
 	// make sure corpses are drawn before living objects
 	engine.sendToBack(owner);
 }

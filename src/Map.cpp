@@ -99,17 +99,19 @@ void Map::prepareMap() {
 void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 	TCODRandom *rng = TCODRandom::getInstance();
 	TCODDijkstra *dijkstra;
-	int nWalkable = 0;
+	int nWalkable = 0, nIteration = 0;
 	float fWalkable = 0.0f;
 
-	while( fWalkable < 0.4f ) {
+    engine.level++;
+
+	while( fWalkable < 0.4f && nIteration < 10 ) {
 		// Prepare a new cave map
 		prepareMap();
 
 		// Pick the starting location of the player
         px = rng->getInt(2, width - 3);
         py = rng->getInt(2, height - 3);
-		while( isWall(px, py) ) {
+		while( isNotWalkable(px, py) ) {
 			px = rng->getInt(2, width - 3);
 			py = rng->getInt(2, height - 3);
         }
@@ -131,86 +133,158 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 		}
 		fWalkable = static_cast<float>(nWalkable)/static_cast<float>(width*height);
 		delete dijkstra;
+        nIteration++;
+        //std::cout << "Iteration, fWalkable = " << nIteration << ", " << fWalkable << "\n";
 	}
 
 	// Assign the location of the tunnel, ensuring they are sufficiently far apart
+    nIteration = 0;
 	dx = rng->getInt(2, width - 3);
 	dy = rng->getInt(2, height - 3);
-	while( isWall(dx, dy) && ( pow(dx - px, 2) + pow(dy - py, 2) < 8000 ) ) {
+	int dp2 = pow(dx - px, 2) + pow(dy - py, 2);
+	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 ) ) && nIteration < 10 )  {
 		dx = rng->getInt(2, width - 3);
 		dy = rng->getInt(2, height - 3);
+		dp2 = pow(dx - px, 2) + pow(dy - py, 2);
+        nIteration++;
 	}
 
-	for(int i = 0; i < 12; i++) {
+    int nitems = 12, ncreatures = 24, nequip = 4;
+	for(int i = 0; i < nitems + ncreatures + nequip; i++) {
+        nIteration = 0;
 		int qx = rng->getInt(2, width - 3);
 		int qy = rng->getInt(2, height - 3);
-		while( isWall(qx, qy) && ( pow(qx - px, 2) + pow(qy - py, 2) < 100 ) && ( pow(qx - dx, 2) + pow(qy - dy, 2) < 100 ) ) {
+		int qp2 = pow(qx - px, 2) + pow(qy - py, 2);
+		int qd2 = pow(qx - dx, 2) + pow(qy - dy, 2);
+		while( ( isNotWalkable(qx, qy) || ( qp2 < 225 ) || ( qd2 < 225 ) ) && nIteration < 10 ) {
 			qx = rng->getInt(2, width - 3);
 			qy = rng->getInt(2, height - 3);
-      }
-      addItem(qx, qy);
-    }
+			qp2 = pow(qx - px, 2) + pow(qy - py, 2);
+			qd2 = pow(qx - dx, 2) + pow(qy - dy, 2);
+		}
 
-	for(int i = 0; i < 24; i++) {
-		int qx = rng->getInt(2, width - 3);
-		int qy = rng->getInt(2, height - 3);
-		while( isWall(qx, qy) && ( pow(qx - px, 2) + pow(qy - py, 2) < 100 ) && ( pow(qx - dx, 2) + pow(qy - dy, 2) < 100 ) ) {
-			qx = rng->getInt(2, width - 3);
-			qy = rng->getInt(2, height - 3);
-      }
-      addCreature(qx, qy);
-    }
+		if( i < nitems ) {
+			addItem(qx, qy);
+		} else if( i >= nitems && i < nitems + ncreatures ) {
+			addCreature(qx, qy);
+		} else {
+            addEquipment(qx, qy);
+        }
+	}
 }
 
 void Map::addCreature(int x, int y) {
-	TCODRandom *rng=TCODRandom::getInstance();
+	TCODRandom *rng = TCODRandom::getInstance();
     if ( rng->getInt(0,100) < 80 ) {
-        // create an orc
-        Object *orc = new Object(x, y, 256, "Orc", TCODColor::white);
-        orc->entity = new CreatureEntity(10, 3, 0, "dead orc");
-        orc->entity->ai = new MonsterAi();
-        engine.objects.push(orc);
+        // Create an Orc
+        Object *object = new Object(x, y, CHAR_ORC_PEON, "Orc", TCODColor::white);
+        object->entity = new CreatureEntity(10, 3, 0, "dead orc");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
     } else {
-        // create a troll
-        Object *troll = new Object(x, y, 257, "Troll", TCODColor::white);
-        troll->entity = new CreatureEntity(16, 4, 1, "troll carcass");
-        troll->entity->ai = new MonsterAi();
-        engine.objects.push(troll);
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_ORGE_PEON_GREEN, "Ogre", TCODColor::white);
+        object->entity = new CreatureEntity(16, 4, 1, "ogre carcass");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
     }
 }
 
 void Map::addItem(int x, int y) {
-	TCODRandom *rng=TCODRandom::getInstance();
-	int dice = rng->getInt(0,100);
-	if ( dice < 70 ) {
+	TCODRandom *rng = TCODRandom::getInstance();
+	int dice = rng->getInt(0, 100);
+	if ( dice < 75 ) {
 		// create a health potion
-		Object *healthPotion=new Object(x,y,259,"health potion", TCODColor::white);
-		healthPotion->blocks=false;
-		healthPotion->item=new Healer(4);
-		engine.objects.push(healthPotion);
-	} else if ( dice < 70+10 ) {
-		// create a scroll of lightning bolt 
-		Object *scrollOfLightningBolt=new Object(x,y,'#',"scroll of lightning", TCODColor::lightYellow);
-		scrollOfLightningBolt->blocks=false;
-		scrollOfLightningBolt->item=new LightningBolt(5,20);
-		engine.objects.push(scrollOfLightningBolt);
-	} else if ( dice < 70+10+10 ) {
-		// create a scroll of fireball
-		Object *scrollOfFireball=new Object(x,y,'#',"scroll of fire", TCODColor::lightYellow);
-		scrollOfFireball->blocks=false;
-		scrollOfFireball->item=new Fireball(3,12);
-		engine.objects.push(scrollOfFireball);
+		Object *object = new Object(x,y,CHAR_POTION_RED,"health potion", TCODColor::white);
+		object->blocks = false;
+		object->item = new Potion(Potion::HEAL, 5);
+		engine.objects.push(object);
+    } else if ( dice < 75+10 ) {
+        // create an unknown potion
+        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
+        int value = rng->getInt(-3, 3);
+        if( value == 0 ) value = -1;
+        Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::UNKNOWN, value);
+        engine.objects.push(object);
+    } else if ( dice < 75+10+5 ) {
+		// create an attack potion 
+		Object *object = new Object(x,y,CHAR_POTION_GREEN,"attack potion", TCODColor::white);
+		object->blocks = false;
+		object->item = new Potion(Potion::ATK, 1);
+		engine.objects.push(object);
+	} else if ( dice < 75+10+5+5 ) {
+		// create a defense potion
+		Object *object = new Object(x,y,CHAR_POTION_BLUE,"defense potion", TCODColor::white);
+		object->blocks = false;
+		object->item = new Potion(Potion::DEF, 1);
+		engine.objects.push(object);
 	} else {
-		// create a scroll of confusion
-		Object *scrollOfConfusion=new Object(x,y,'#',"scroll of ice", TCODColor::lightYellow);
-		scrollOfConfusion->blocks=false;
-		scrollOfConfusion->item=new Confuser(10,8);
-		engine.objects.push(scrollOfConfusion);
+		// create an unknown potion
+        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
+        int value = rng->getInt(-3, 3);
+        if( value == 0 ) value = -1;
+		Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+		object->blocks = false;
+		object->item = new Potion(Potion::UNKNOWN, value);
+		engine.objects.push(object);
 	}
+}
+
+void Map::addEquipment(int x, int y) {
+    TCODRandom *rng = TCODRandom::getInstance();
+    int dice = rng->getInt(0, 100);
+    if ( dice < 75 ) {
+        // create a health potion
+        Object *object = new Object(x,y,CHAR_POTION_RED,"health potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::HEAL, 5);
+        engine.objects.push(object);
+    } else if ( dice < 75+10 ) {
+        // create an unknown potion
+        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
+        int value = rng->getInt(-3, 3);
+        if( value == 0 ) value = -1;
+        Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::UNKNOWN, value);
+        engine.objects.push(object);
+    } else if ( dice < 75+10+5 ) {
+        // create an attack potion 
+        Object *object = new Object(x,y,CHAR_POTION_GREEN,"attack potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::ATK, 1);
+        engine.objects.push(object);
+    } else if ( dice < 75+10+5+5 ) {
+        // create a defense potion
+        Object *object = new Object(x,y,CHAR_POTION_BLUE,"defense potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::DEF, 1);
+        engine.objects.push(object);
+    } else {
+        // create an unknown potion
+        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
+        int value = rng->getInt(-3, 3);
+        if( value == 0 ) value = -1;
+        Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+        object->blocks = false;
+        object->item = new Potion(Potion::UNKNOWN, value);
+        engine.objects.push(object);
+    }
 }
 
 bool Map::isWall(int x, int y) const {
     return !map->isWalkable(x, y);
+}
+
+bool Map::isNotWalkable(int x, int y) const {
+
+	bool result;
+
+	result = isWall(x - 1, y - 1) || isWall(x + 0, y - 1) || isWall(x + 1, y - 1) || isWall(x - 1, y + 0) || isWall(x + 0, y + 0) || isWall(x + 1, y + 0) || isWall(x - 1, y + 1) || isWall(x + 0, y + 1) || isWall(x + 1, y + 1);
+
+	return result;
 }
 
 bool Map::canWalk(int x, int y) const {

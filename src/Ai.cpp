@@ -105,9 +105,23 @@ void PlayerAi::update(Object *owner) {
 		case TCODK_ENTER :
 		{
 			// We have to go deeper!
-			if( owner->x == engine.tunnel->x && owner->y == engine.tunnel->y ) {
+			if( owner->x == engine.stairs->x && owner->y == engine.stairs->y ) {
+				int px, py, dx, dy;
+				engine.objects.clear();
+				engine.map->generateMap(px, py, dx, dy);
+				std::cout << "px, py = " << px << ", " << py << std::endl;
+				std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
+				engine.player->x = px;
+				engine.player->y = py;
+				engine.stairs->x = px;
+				engine.stairs->y = py;
+
+				engine.objects.push(engine.player);
+				engine.objects.push(engine.stairs);
+				engine.map->computeFov();
+
 				engine.gui->message(TCODColor::lightYellow, "You tumble deeper into the cave");
-				engine.gui->message(TCODColor::lightYellow, "Unfortunately you cannot go back the way you came!");
+				engine.gui->message(TCODColor::lightYellow, "Unfortunately you can't go back the way you came!");
 			}
 			break;
 		}
@@ -224,7 +238,15 @@ void PlayerAi::choseFromInventory(Object *owner) {
 	for (int i = 0; i < owner->container->inventory.size(); i++) {
 		Object *object = owner->container->inventory.get(i);
 		std::string name = "%c";
-		name.append(object->name);
+		if( owner->entity->worn && owner->entity->worn == object ) {
+			name.append(object->name);
+			name.append(" (equipped)");
+		} else if( owner->entity->wielded && owner->entity->wielded == object ) {
+			name.append(object->name);
+			name.append(" (wielded)");
+		} else {
+			name.append(object->name);
+		}
 		name.append("%c");
 		if( i == cursor ) {
 			con.print(2, y++, name.c_str(), TCOD_COLCTRL_2, TCOD_COLCTRL_STOP);
@@ -273,8 +295,15 @@ void PlayerAi::choseFromInventory(Object *owner) {
 						break;
 					}
 					case 'e': {
-						std::cout << "Equip selected item" << std::endl;
-						//Object *object = owner->container->inventory.get(cursor);
+						if( owner->container->inventory.size() > 0 ) {
+							std::cout << "Equip selected item" << std::endl;
+							Object *object = owner->container->inventory.get(cursor);
+							if( object->item->equip(object, owner) ) {
+								cursor--;
+								if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+								engine.gameStatus = Engine::NEW_TURN;
+							}
+						}
 						break;
 					}
 					case 'u': {
@@ -324,7 +353,15 @@ void PlayerAi::choseFromInventory(Object *owner) {
 		for (int i = 0; i < owner->container->inventory.size(); i++) {
 			Object *object = owner->container->inventory.get(i);
 			std::string name = "%c";
-			name.append(object->name);
+			if( owner->entity->worn && owner->entity->worn == object ) {
+				name.append(object->name);
+				name.append(" (equipped)");
+			} else if( owner->entity->wielded && owner->entity->wielded == object ) {
+				name.append(object->name);
+				name.append(" (wielded)");
+			} else {
+				name.append(object->name);
+			}
 			name.append("%c");
 			if( i == cursor ) {
 				con.print(2, y++, name.c_str(), TCOD_COLCTRL_2, TCOD_COLCTRL_STOP);

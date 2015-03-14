@@ -39,16 +39,13 @@ void Gui::render() {
 		}
 	}
 
-	// mouse look
-	renderMouseLook();
-
-	// Cave depth
+	// Player stats
 	y = 3;
 	con->setDefaultForeground(TCODColor::white);
 	con->print(1,y++,"ATK: %d",engine.player->entity->atk);
 	con->print(1,y++,"DEF: %d",engine.player->entity->def);
 	//con->print(1,y++,"SPD: %d",engine.player->entity->spd);
-	con->print(1,y++,"LVL: %d",1);
+	con->print(1,y++,"LVL: %d",engine.level);
 
 	// blit the GUI console on the root console
 	TCODConsole::blit(con,0,0,engine.windowWidth,PANEL_HEIGHT,
@@ -80,30 +77,6 @@ Gui::Message::Message(const char *text, const TCODColor &col) :
 
 Gui::Message::~Message() {
 	free(text);
-}
-
-void Gui::renderMouseLook() {
-	if (! engine.map->isInFov(engine.mouse.cx, engine.mouse.cy)) {
-		// if mouse is out of fov, nothing to render
-		return;
-	}
-	char buf[128]="";
-	bool first=true;
-	for (Object **it=engine.objects.begin(); it != engine.objects.end(); it++) {
-		Object *object=*it;
-		// find objects under the mouse cursor
-		if (object->x == engine.mouse.cx && object->y == engine.mouse.cy ) {
-			if (! first) {
-				strcat(buf,", ");
-			} else {
-				first=false;
-			}
-			strcat(buf,object->name);
-		}
-	}
-	// display the list of objects under the mouse cursor
-	con->setDefaultForeground(TCODColor::lightGrey);
-	con->print(1,0,buf);
 }
 
 void Gui::message(const TCODColor &col, const char *text, ...) {

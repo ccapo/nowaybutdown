@@ -3,40 +3,315 @@
 
 Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadius(12),
 	windowWidth(windowWidth),windowHeight(windowHeight),displayWidth(windowWidth),displayHeight(windowHeight - 9),
-	mapWidth(2*windowWidth),mapHeight(2*(windowHeight - 9)), playerHP(30), playerATK(5), playerDEF(2) {
-	TCODConsole::setCustomFont("data/fonts/arial8x8-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
-    TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.2.0",false);
+	mapWidth(2*windowWidth),mapHeight(2*(windowHeight - 9)), level(0), restart(false) {
+	TCODConsole::setCustomFont("data/fonts/arial16x16-ext.png", TCOD_FONT_LAYOUT_TCOD | TCOD_FONT_TYPE_GREYSCALE, 32, 14);
+    TCODConsole::initRoot(windowWidth,windowHeight,"NoWayButDown v0.3.0",false);
 	int fpsMax = 24, initialDelay = 100, interval = 1000/MAX(10,fpsMax);
     TCODSystem::setFps(fpsMax);
 	TCODConsole::setKeyboardRepeat(initialDelay, interval);
 	TCODMouse::showCursor(true);
-    TCODConsole::mapAsciiCodeToFont(256, 9, 10); // orc
-    TCODConsole::mapAsciiCodeToFont(257, 0, 10); // troll
-    TCODConsole::mapAsciiCodeToFont(258, 1, 9); // player
-	TCODConsole::mapAsciiCodeToFont(259, 10, 8); // health potion
-	TCODConsole::mapAsciiCodeToFont(260, 18, 10); // corpse
-    player = new Object(10, 10, '@', "Player", TCODColor::white);
-    player->entity = new PlayerEntity(playerHP, playerATK, playerDEF, "your corpse");
-    player->entity->ai = new PlayerAi();
-    player->container = new Container(24);
 
-	tunnel = new Object(10, 10, '>', "tunnel down", TCODColor::white);
-	tunnel->blocks = false;
-    tunnel->entity = new Entity(0, 0, 0, "a tunnel down");
+	// Assign extra ascii keys
+	int x = 0, y = 8;
+	TCODConsole::mapAsciiCodeToFont(CHAR_STAIRS_UP, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_STAIRS_DOWN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_HOLE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_WATER_01, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_WATER_02, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_LAVA_01, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_LAVA_02, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_CHEST_OPEN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CHEST_CLOSED, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_POTION_YELLOW, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_POTION_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_POTION_GREEN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_POTION_BLUE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_KEY, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_GREEN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_BLUE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_RED_BIG, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_GREEN_BIG, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_RING_BLUE_BIG, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHIELD_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHIELD_GREY, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHIELD_GOLD, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SWORD_BASIC, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SWORD_STEEL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SWORD_GOLD, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_YELLOW, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_GREEN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_BLUE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ARMOUR_MITHRIL, x++, y);
+	x = 0; y++;
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_CHARGEBAR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_PLAYER_RIGHT, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PLAYER_DOWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PLAYER_LEFT, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PLAYER_UP, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_GUARDIAN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_KEEPER, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PERSON_MALE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PERSON_FEMALE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_GUARD, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_WARLOCK_PURPLE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_NECROMANCER_APPENTICE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_NECROMANCER_MASTER, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DARKELF_ARCHER, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DARKELF_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DARKELF_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DWARF_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DWARF_AXEBEARER, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DWARF_MAGE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DWARF_HERO, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_UNDEAD_DWARF_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_UNDEAD_DWARF_AXEBEARER, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_UNDEAD_DWARF_MAGE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_UNDEAD_DWARF_HERO, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOBLIN_PEON, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOBLIN_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOBLIN_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_IMP_BLUE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_IMP_RED, x++, y);
+	x = 0; y++;
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORGE_PEON_GREEN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORGE_WARRIOR_GREEN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORGE_PEON_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORGE_WARRIOR_RED, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SKELETON_PEON, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SKELETON_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SKELETON_HERO, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SKELETON_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SPRITE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORC_PEON, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORC_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORC_HERO, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_ORC_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMON_PEON, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMON_HERO, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMON_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLAYER_WARRIOR, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLAYER_MAGE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SKULL, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOLEM_GREY, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOLEM_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_GOLEM_RED, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIME_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIME_GREEN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_EYEBALL, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_VERMIN_BROWN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SNAKE_GREEN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_RUBBLE_PILE, x++, y);
+		x = 0; y++;
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SCORPIAN_YELLOW, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SCORPIAN_BLACK, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SPIDER_BLACK, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SPIDER_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SPIDER_GREEN, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_PYTHON_RED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PYTHON_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_PYTHON_YELLOW, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BAT_BROWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BAT_BLUE, x++, y);
+
+	// Environment Tiles
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_A, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_B, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_C, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_D, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_E, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_F, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TREE_G, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHRUB_A, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHRUB_B, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHRUB_C, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SHRUB_D, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_MUSHROOM, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLOWERS_WHITE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLOWERS_BLUE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_TEMPLE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TOWN, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CAVE, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BED, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_TABLE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BOOKCASE, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CHAIR_RIGHT, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CHAIR_LEFT, x++, y);
+	x = 0; y++;
+
+	// Minor Bosses (Upper Portion)
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_WHITE_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_WHITE_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_RED_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_RED_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_CYCLOPS_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CYCLOPS_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_RED_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_RED_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_YELLOW_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_YELLOW_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREEN_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREEN_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_BLUE_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_BLUE_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREY_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREY_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_MINOTAUR_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_MINOTAUR_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_LIZARD_GIANT_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_LIZARD_GIANT_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_MEDUSA_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_MEDUSA_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLYING_BRAIN_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLYING_BRAIN_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIMELORD_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIMELORD_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHOLDER_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHOLDER_UR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHEMOTH_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHEMOTH_UR, x++, y);
+
+	// Final Boss (Upper Portion)
+	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_UL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_UR, x++, y);
+	x = 0; y++;
+
+	// Minor Bosses (Lower Portion)
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_WHITE_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_WHITE_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_RED_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DEMONLORD_RED_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_CYCLOPS_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_CYCLOPS_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_RED_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_RED_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_YELLOW_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_YELLOW_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREEN_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREEN_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_BLUE_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_BLUE_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREY_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_DRAGON_LARGE_GREY_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_MINOTAUR_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_MINOTAUR_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_LIZARD_GIANT_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_LIZARD_GIANT_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_MEDUSA_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_MEDUSA_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLYING_BRAIN_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FLYING_BRAIN_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIMELORD_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_SLIMELORD_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHOLDER_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHOLDER_LR, x++, y);
+
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHEMOTH_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_BEHEMOTH_LR, x++, y);
+
+	// Final Boss (Lower Portion)
+	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_LL, x++, y);
+	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_LR, x++, y);
+
+    player = new Object(0, 0, '@', "Player", TCODColor::white);
+    player->entity = new PlayerEntity(30, 5, 2, "your corpse");
+    player->entity->ai = new PlayerAi();
+    player->container = new Container(12);
+
+	stairs = new Object(0, 0, CHAR_STAIRS_DOWN, "stairs down", TCODColor::white);
+	stairs->blocks = false;
+    stairs->entity = new Entity(0, 0, 0, "a stairs down");
+
+	Object *object = new Object(0,0,CHAR_SWORD_BASIC,"sword", TCODColor::white);
+	object->blocks = false;
+	object->entity = new Entity(0, 2, 2, "a sword");
+	object->item = new Equipment(Equipment::SWORD, 0, 2, 2);
 
     map = new Map(mapWidth, mapHeight);
 
 	int px, py, dx, dy;
 	map->generateMap(px, py, dx, dy);
-	std::cout << "px, uy = " << px << ", " << py << std::endl;
+	std::cout << "px, py = " << px << ", " << py << std::endl;
 	std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
-	player->x = px;
+	player->x = px; 
 	player->y = py;
-	tunnel->x = dx;
-	tunnel->y = dy;
+	stairs->x = dx;
+	stairs->y = dy;
+	object->x = px+1;object->y = py;
 
     objects.push(player);
-	objects.push(tunnel);
+	objects.push(stairs);
+	objects.push(object);
 
     gui = new Gui();
     gui->message(TCODColor::red, "You decide to venture inside the cave" );
@@ -75,7 +350,7 @@ bool Engine::update() {
 		}
 		case DEFEAT: {
 
-			con.setAlignment(TCOD_LEFT);
+			con.setAlignment(TCOD_CENTER);
 			con.setBackgroundFlag(TCOD_BKGND_SET);
 			con.setDefaultBackground(TCODColor::black);
 			con.setDefaultForeground(TCODColor::white);
@@ -83,16 +358,19 @@ bool Engine::update() {
 
 			// display the inventory frame
 			con.setDefaultForeground(TCODColor(200,180,50));
-			con.printFrame(0, 0, DIALOG_WIDTH, DIALOG_HEIGHT, true, TCOD_BKGND_DEFAULT, playerHP == 1 ? "Defeat" : "Defeat?");
+			con.printFrame(0, 0, DIALOG_WIDTH, DIALOG_HEIGHT, true, TCOD_BKGND_DEFAULT, restart ? "Defeat" : "Defeat?");
 
-			int y = 2;
 			con.setDefaultForeground(TCODColor::white);
-			con.print(2, y++, "%s", "You Died.");
-			if( playerHP > 1 ) {
+			if( !restart ) {
+				int y = DIALOG_HEIGHT/2 - 3;
+				con.print(DIALOG_WIDTH/2, y++, "%s", "You Died");
 				y++;
-				con.print(2, y++, "%s", "Would you like to be re-animated?");
+				con.print(DIALOG_WIDTH/2, y++, "%s", "Would you like to be continue?");
 				y++;
-				con.print(2, y++, "%s", "(Y)es or (N)o");
+				con.print(DIALOG_WIDTH/2, y++, "%s", "(Y)es or (N)o");
+			} else {
+				int y = DIALOG_HEIGHT/2 - 1;
+				con.print(DIALOG_WIDTH/2, y++, "%s", "You Died.");
 			}
 
 			// blit the help console on the root console
@@ -102,20 +380,17 @@ bool Engine::update() {
 			// wait for a key press
 			TCOD_key_t key;
 			TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS, &key, NULL, true);
-			if( playerHP == 1 ) return false;
+			if( restart && key.vk == TCODK_ENTER ) return false;
 			if( key.c == 'y' || key.c == 'Y' ) {
-				playerHP = static_cast<int>(static_cast<float>(playerHP)/3.0);
-				playerATK += 3;
-				playerDEF -= 1;
-				if( playerDEF <= 0 ) playerDEF = 0;
 				delete player->entity;
-				player->entity = new PlayerEntity(playerHP, playerATK, playerDEF, "your corpse");
+				player->entity = new PlayerEntity(15, 10, 1, "your corpse");
 				player->entity->ai = new PlayerAi();
 				player->name = "Re-animated Corpse";
 				player->ch = '@';
 				player->col = TCODColor::desaturatedGreen;
 				player->blocks = true;
 				gameStatus = STARTUP;
+				restart = true;
 			} else if( key.c == 'n' || key.c == 'N' ) {
 				return false;
 			}
