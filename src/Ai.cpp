@@ -68,21 +68,6 @@ void MonsterAi::moveOrAttack(Object *owner, int targetx, int targety) {
 			}
 		}
 	}
-
-	/*if ( distance >= 2 ) {
-		dx = (int)(round(dx/distance));
-		dy = (int)(round(dy/distance));
-		if ( engine.map->canWalk(owner->x + dx, owner->y + dy) ) {
-			owner->x += dx;
-			owner->y += dy;
-		} else if ( engine.map->canWalk(owner->x + stepdx, owner->y) ) {
-			owner->x += stepdx;
-		} else if ( engine.map->canWalk(owner->x, owner->y + stepdy) ) {
-			owner->y += stepdy;
-		}
-	} else if ( owner->entity ) {
-		owner->entity->attack(owner, engine.player);
-	}*/
 }
 
 void PlayerAi::update(Object *owner) {
