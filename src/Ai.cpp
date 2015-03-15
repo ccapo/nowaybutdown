@@ -29,7 +29,7 @@ void MonsterAi::moveOrAttack(Object *owner, int targetx, int targety) {
 	int dty = targety - owner->y;
 	double distance = sqrtf(dtx*dtx + dty*dty);
 
-	if( distance < 5.0 ) {
+	if( distance < 2.0 ) {
 		if( owner->entity ) owner->entity->attack(owner, engine.player);
 	} else {
 		// Decide where to go based on competing goals in adjacent cells
