@@ -7,9 +7,8 @@
 * Modify map generation to use Cellular Automata
 * Add scent/goal tracking for creature AI
     * Try several AI ideas
-* Auto pickup items by walking over them
 * Player stats display in GUI
-    * HP, HPMAX, ATK, DEF, SPD (real-time)
+    * HP, HPMAX, ATK, DEF
 * Inventory list is scrollable (not sorted or aggregated)
     * Can use, wield or drop items
-    * Inventory limit: 24
+    * Inventory limit: 12
