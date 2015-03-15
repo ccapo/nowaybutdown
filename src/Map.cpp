@@ -142,7 +142,7 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 	dx = rng->getInt(2, width - 3);
 	dy = rng->getInt(2, height - 3);
 	int dp2 = pow(dx - px, 2) + pow(dy - py, 2);
-	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 ) ) && nIteration < 100 )  {
+	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 - 75*nIteration ) ) && nIteration < 100 )  {
 		dx = rng->getInt(2, width - 3);
 		dy = rng->getInt(2, height - 3);
 		dp2 = pow(dx - px, 2) + pow(dy - py, 2);
