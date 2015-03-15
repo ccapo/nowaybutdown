@@ -3,32 +3,73 @@
 #include "Main.hpp"
 
 // How many turns the monster chases the player after losing his sight
-static const int TRACKING_TURNS = 3;
+static const int TRACKING_TURNS = 4;
 
-MonsterAi::MonsterAi() : moveCount(0) {}
+MonsterAi::MonsterAi() : moveCount(TRACKING_TURNS) {}
 
 void MonsterAi::update(Object *owner) {
     if ( owner->entity && owner->entity->isDead() ) {
     	return;
     }
-	if ( engine.map->isInFov(owner->x, owner->y) ) {
-    	// we can see the player. move towards him
-    	moveCount = TRACKING_TURNS;
+
+    moveCount--;
+    if( moveCount >= 0 ) {
+    	moveOrAttack(owner, engine.player->x, engine.player->y);
     } else {
-    	moveCount--;
+    	if( moveCount <= -1 ) moveCount = TRACKING_TURNS;
     }
-   	if ( moveCount > 0 ) {
-   		moveOrAttack(owner, engine.player->x, engine.player->y);
-   	}
 }
 
 void MonsterAi::moveOrAttack(Object *owner, int targetx, int targety) {
-	int dx = targetx - owner->x;
-	int dy = targety - owner->y;
-	int stepdx = (dx > 0 ? 1 : -1);
-	int stepdy = (dy > 0 ? 1 : -1);
-	float distance = sqrtf(dx*dx + dy*dy);
-	if ( distance >= 2 ) {
+    const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+    const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+
+    TCODRandom *rng = TCODRandom::getInstance();
+	int dtx = targetx - owner->x;
+	int dty = targety - owner->y;
+	double distance = sqrtf(dtx*dtx + dty*dty);
+
+	if( distance < 2.0 ) {
+		if( owner->entity ) owner->entity->attack(owner, engine.player);
+	} else {
+		// Decide where to go based on competing goals in adjacent cells
+		int iz = -1;
+		double goalMax = -1.0;
+		for(int z = 0; z < 8; z++) {
+			double goal0 = engine.map->getGoal(owner->x + dx[z], owner->y + dy[z], 0);
+			double goal1 = engine.map->getGoal(owner->x + dx[z], owner->y + dy[z], 1);
+			if( goal0 > goalMax ) {
+				goalMax = goal0;
+				iz = z;
+			}
+			if( goal1 > goalMax ) {
+				goalMax = goal1;
+				iz = z;
+			}
+		}
+
+		if( iz != -1 ) {
+			// Move in the direction of the largest goal
+			if( engine.map->canWalk(owner->x + dx[iz], owner->y + dy[iz]) ) {
+				owner->x += dx[iz];
+				owner->y += dy[iz];
+			}
+		} else {
+			// Move in random direction
+			int counter = 0;
+			iz = rng->getInt(0, 7);
+			while( !engine.map->canWalk(owner->x + dx[iz], owner->y + dy[iz]) && counter < 8 ) {
+				iz = rng->getInt(0, 7);
+				counter++;
+			}
+			if( counter != 8 ) {
+				owner->x += dx[iz];
+				owner->y += dy[iz];
+			}
+		}
+	}
+
+	/*if ( distance >= 2 ) {
 		dx = (int)(round(dx/distance));
 		dy = (int)(round(dy/distance));
 		if ( engine.map->canWalk(owner->x + dx, owner->y + dy) ) {
@@ -41,33 +82,7 @@ void MonsterAi::moveOrAttack(Object *owner, int targetx, int targety) {
 		}
 	} else if ( owner->entity ) {
 		owner->entity->attack(owner, engine.player);
-	}
-}
-
-ConfusedMonsterAi::ConfusedMonsterAi(int nTurns, Ai *prevAi) : nTurns(nTurns), prevAi(prevAi) {}
-
-void ConfusedMonsterAi::update(Object *owner) {
-	TCODRandom *rng = TCODRandom::getInstance();
-	int dx = rng->getInt(-1, 1);
-	int dy = rng->getInt(-1, 1);
-	if ( dx != 0 || dy != 0 ) {
-		int destx = owner->x + dx;
-		int desty = owner->y + dy;
-		if ( engine.map->canWalk(destx, desty) ) {
-			owner->x = destx;
-			owner->y = desty;
-		} else {
-			Object *object = engine.getObject(destx, desty);
-			if ( object ) {
-				owner->entity->attack(owner, object);
-			}
-		}
-	}
-	nTurns--;
-	if ( nTurns == 0 ) {
-		owner->entity->ai = prevAi;
-		delete this;
-	}
+	}*/
 }
 
 void PlayerAi::update(Object *owner) {
@@ -109,8 +124,6 @@ void PlayerAi::update(Object *owner) {
 				int px, py, dx, dy;
 				engine.objects.clear();
 				engine.map->generateMap(px, py, dx, dy);
-				std::cout << "px, py = " << px << ", " << py << std::endl;
-				std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
 				engine.player->x = px;
 				engine.player->y = py;
 				engine.stairs->x = px;
@@ -138,6 +151,7 @@ void PlayerAi::update(Object *owner) {
     	engine.gameStatus = Engine::NEW_TURN;
     	if (moveOrAttack(owner, owner->x + dx,owner->y + dy)) {
     		engine.map->computeFov();
+    		engine.map->updateGoals();
     	}
 	}
 
@@ -266,68 +280,55 @@ void PlayerAi::choseFromInventory(Object *owner) {
 			cursor = 0;
 			break;
 		}
-		switch( key.vk ) {
-			case TCODK_DOWN:
-			{
-				// Move the cursor position down
-				if( owner->container->inventory.size() > 0 ) cursor = (cursor + 1) % owner->container->inventory.size();
-				break;
-			}
-			case TCODK_UP:
-			{
-				// Move the cursor position up
-				if( owner->container->inventory.size() > 0 ) {
+		if( owner->container->inventory.size() > 0 ) {
+			switch( key.vk ) {
+				case TCODK_DOWN:
+				{
+					// Move the cursor position down
+					cursor = (cursor + 1) % owner->container->inventory.size();
+					break;
+				}
+				case TCODK_UP:
+				{
+					// Move the cursor position up
 					cursor--;
 					if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+					break;
 				}
-				break;
-			}
-			case TCODK_CHAR: {
-				switch( key.c ) {
-					case 'd': {
-						if( owner->container->inventory.size() > 0 ) {
+				case TCODK_CHAR: {
+					switch( key.c ) {
+						case 'd': {
 							Object *object = owner->container->inventory.get(cursor);
 							object->item->drop(object, owner);
 							cursor--;
-							if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+							if(cursor < 0) cursor = 0;
 							engine.gameStatus = Engine::NEW_TURN;
+							break;
 						}
-						break;
-					}
-					case 'e': {
-						if( owner->container->inventory.size() > 0 ) {
-							std::cout << "Equip selected item" << std::endl;
-							Object *object = owner->container->inventory.get(cursor);
-							if( object->item->equip(object, owner) ) {
-								cursor--;
-								if(cursor < 0) cursor = owner->container->inventory.size() - 1;
-								engine.gameStatus = Engine::NEW_TURN;
-							}
-						}
-						break;
-					}
-					case 'u': {
-						if( owner->container->inventory.size() > 0 ) {
+						case 'u': {
 							Object *object = owner->container->inventory.get(cursor);
 							if( object->item->use(object, owner) ) {
 								cursor--;
-								if(cursor < 0) cursor = owner->container->inventory.size() - 1;
+								if(cursor < 0) cursor = 0;
 								engine.gameStatus = Engine::NEW_TURN;
 							}
+							break;
 						}
-						break;
+						case 'e': {
+							Object *object = owner->container->inventory.get(cursor);
+							if( object->item->equip(object, owner, 'e') ) engine.gameStatus = Engine::NEW_TURN;
+							break;
+						}
+						case 'w': {
+							Object *object = owner->container->inventory.get(cursor);
+							if( object->item->equip(object, owner, 'w') ) engine.gameStatus = Engine::NEW_TURN;
+							break;
+						}
+						default: break;
 					}
-					case 'w': {
-						std::cout << "Wield selected item" << std::endl;
-						//Object *object = owner->container->inventory.get(cursor);
-						//object->entity->wield(object, owner);
-						//engine.gameStatus = Engine::NEW_TURN;						
-						break;
-					}
-					default: break;
 				}
+				default: break;
 			}
-			default: break;
 		}
 
 		con.clear();
@@ -396,6 +397,7 @@ void PlayerAi::helpScreen() {
 	// content of help screen
 	con.print(2, y++, "%s", "Movement : Arrow Keys");
 	con.print(2, y++, "%s", "Inventory: Escape");
+	con.print(2, y++, "%s", "Stairs   : Enter");
 	con.print(2, y++, "%s", "Grab     : g");
 	con.print(2, y++, "%s", "Drop     : d (From Inventory)");
 	con.print(2, y++, "%s", "Use      : u (From Inventory)");

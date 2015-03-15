@@ -9,8 +9,8 @@ Entity::Entity(int hpMax, int atk, int def, const char *corpseName) :
 Entity::~Entity() {
 	corpseName = NULL;
 	if ( ai ) delete ai;
-	if ( wielded ) delete wielded;
-	if ( worn ) delete worn;
+	wielded = NULL;
+	worn = NULL;
 }
 
 void Entity::attack(Object *owner, Object *target) {
@@ -27,7 +27,8 @@ void Entity::attack(Object *owner, Object *target) {
 }
 
 int Entity::damage(Object *owner, int amount) {
-	amount -= def;
+	amount /= 2;
+	amount -= def/4;
 	if ( amount > 0 ) {
 		hp -= amount;
 		if ( hp <= 0 ) {
@@ -48,31 +49,19 @@ int Entity::heal(int amount) {
 	return amount;
 }
 
-void Entity::equip(Object *object) {
-	hpMax = baseHpMax + object->entity->hpMax;
-	hp += object->entity->hpMax;
-	atk = baseAtk + object->entity->atk;
-	def = baseDef + object->entity->def;
-}
-
-void Entity::dequip(Object *object) {
-	hpMax = baseHpMax - object->entity->hpMax;
-	hp -= object->entity->hpMax;
-	atk = baseAtk - object->entity->atk;
-	def = baseDef - object->entity->def;
-}
-
 void Entity::die(Object *owner) {
 	// transform the object into a corpse!
 	owner->ch = CHAR_SKULL;
 	owner->col = TCODColor::white;	
 	owner->name = corpseName;
 	owner->blocks = false;
-	delete owner->entity->ai;
-	owner->entity->ai = NULL;
-	delete owner->entity;
-	owner->entity = NULL;
-	owner->item = new Equipment(0, 0, 1, 0);
+	if( owner != engine.player ) {
+		delete owner->entity->ai;
+		owner->entity->ai = NULL;
+		delete owner->entity;
+		owner->entity = NULL;
+		owner->item = new Equipment(Equipment::CORPSE, 0, 0, 1);
+	}
 	// make sure corpses are drawn before living objects
 	engine.sendToBack(owner);
 }

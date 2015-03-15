@@ -1,70 +1,48 @@
 class Item {
 public :
-	Item() {}
+	int type; // Item type
+	int amount; // Strength of Item
+	int hp; // Amount of hp
+	int atk; // Amount of atk
+	int def; // Amount of def
+	Item(): type(0), amount(0), hp(0), atk(0), def(0) {}
+	Item(int type, int amount): type(type), amount(amount), hp(0), atk(0), def(0) {}
+	Item(int type, int hp, int atk, int def): type(type), amount(0), hp(hp), atk(atk), def(def) {}
 	virtual ~Item() {}
 	bool grab(Object *owner, Object *object);
-	void drop(Object *owner, Object *object);
+	virtual void drop(Object *owner, Object *object);
 	virtual bool use(Object *owner, Object *object);
-	virtual bool equip(Object *owner, Object *object);
-	virtual bool wield(Object *owner, Object *object);
+	virtual bool equip(Object *owner, Object *object, int key);
 };
 
 // Potion item
 class Potion: public Item {
 	public:
 	enum {
-		HEAL,
-		ATK,
-		DEF,
-		UNKNOWN,
-		NPOTION
+		HEAL = 1,
+		ATK = 2,
+		DEF = 3,
+		UNKNOWN = 4
 	};
-	int type; // Potion type
-	int amount; // Strength of potion
 
-	Potion(int type, int amount): type(type), amount(amount) {}
+	Potion(int type, int amount): Item(type, amount) {}
 	~Potion() {}
 	bool use(Object *owner, Object *object);
-};
-
-// Spell item
-class Spell: public Item {
-	public:
-	enum {
-		FIRE,
-		ICE,
-		WIND,
-		LIGHTNING,
-		NSPELL
-	};
-	int type; // Spell type
-	int amount; // Strength of spell
-
-	Spell(int type, int amount): type(type), amount(amount) {}
-	//bool use(Object *owner, Object *object);
 };
 
 // Equipment item
 class Equipment: public Item {
 	public:
 	enum {
-		STICK,
-		BONE,
-		SWORD,
-		SHEILD,
-		ARMOUR,
-		RING,
-		CURSED,
-		NEQUIP
+		CORPSE = 11,
+		SWORD = 12,
+		SHEILD = 13,
+		RING = 14,
+		CURSED = 15
 	};
-	int type; // Equip type
-	int hp; // Amount of hp
-	int atk; // Amount of atk
-	int def; // Amount of def
 
-	Equipment(int type, int hp, int atk, int def): type(type), hp(hp), atk(atk), def(def) {}
+	Equipment(int type, int hp, int atk, int def): Item(type, hp, atk, def) {}
 	~Equipment() {}
-	//bool use(Object *owner, Object *object);
-	bool equip(Object *owner, Object *object);
-	bool wield(Object *owner, Object *object);
+	void drop(Object *owner, Object *object);
+	bool equip(Object *owner, Object *object, int key);
 };

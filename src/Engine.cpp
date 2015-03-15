@@ -284,7 +284,7 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
 	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_LR, x++, y);
 
     player = new Object(0, 0, '@', "Player", TCODColor::white);
-    player->entity = new PlayerEntity(30, 5, 2, "your corpse");
+    player->entity = new PlayerEntity(50, 6, 4, "your corpse");
     player->entity->ai = new PlayerAi();
     player->container = new Container(12);
 
@@ -292,26 +292,17 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
 	stairs->blocks = false;
     stairs->entity = new Entity(0, 0, 0, "a stairs down");
 
-	Object *object = new Object(0,0,CHAR_SWORD_BASIC,"sword", TCODColor::white);
-	object->blocks = false;
-	object->entity = new Entity(0, 2, 2, "a sword");
-	object->item = new Equipment(Equipment::SWORD, 0, 2, 2);
-
     map = new Map(mapWidth, mapHeight);
 
 	int px, py, dx, dy;
 	map->generateMap(px, py, dx, dy);
-	std::cout << "px, py = " << px << ", " << py << std::endl;
-	std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
 	player->x = px; 
 	player->y = py;
 	stairs->x = dx;
 	stairs->y = dy;
-	object->x = px+1;object->y = py;
 
     objects.push(player);
 	objects.push(stairs);
-	objects.push(object);
 
     gui = new Gui();
     gui->message(TCODColor::red, "You decide to venture inside the cave" );

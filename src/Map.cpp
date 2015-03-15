@@ -142,14 +142,18 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 	dx = rng->getInt(2, width - 3);
 	dy = rng->getInt(2, height - 3);
 	int dp2 = pow(dx - px, 2) + pow(dy - py, 2);
-	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 ) ) && nIteration < 10 )  {
+	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 ) ) && nIteration < 100 )  {
 		dx = rng->getInt(2, width - 3);
 		dy = rng->getInt(2, height - 3);
 		dp2 = pow(dx - px, 2) + pow(dy - py, 2);
         nIteration++;
 	}
 
-    int nitems = 12, ncreatures = 24, nequip = 4;
+    // Add items, creatures and equipment depending on depth level
+    int l = engine.level;
+    int nitems = 12 - l/2, ncreatures = 24 + (l*l)/2, nequip = 4 - l/2;
+    if( nitems < 0 ) nitems = 0;
+    if( nequip < 0 ) nequip = 0;
 	for(int i = 0; i < nitems + ncreatures + nequip; i++) {
         nIteration = 0;
 		int qx = rng->getInt(2, width - 3);
@@ -165,7 +169,7 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 
 		if( i < nitems ) {
 			addItem(qx, qy);
-		} else if( i >= nitems && i < nitems + ncreatures ) {
+		} else if( i < nitems + ncreatures ) {
 			addCreature(qx, qy);
 		} else {
             addEquipment(qx, qy);
@@ -175,16 +179,131 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 
 void Map::addCreature(int x, int y) {
 	TCODRandom *rng = TCODRandom::getInstance();
-    if ( rng->getInt(0,100) < 80 ) {
+    float dice = rng->getFloat(0.0, 100.0);
+    float l = static_cast<float>(engine.level), lstar = 5.0;
+    float pOrc = 10.0, pGoblin = 10.0;
+    float pTroll = 10.0, pSkeleton = 10.0;
+    float pGolem = 10.0, pSmurf = 10.0;
+    float pDemon = 10.0, pSlime = 10.0;
+    float pFlayer = 10.0; //, pEyeball = 10.0;
+
+    // Create level progression
+    if( l <= lstar ) {
+        pOrc = 50.0 - 50.0*l/lstar;
+        pGoblin = 50.0 - 50.0*l/lstar;
+        pTroll = 50.0*l/lstar;
+        pSkeleton = 50.0*l/lstar;
+        pGolem = 0.0;
+        pSmurf = 0.0;
+        pDemon = 0.0;
+        pSlime = 0.0;
+        pFlayer = 0.0;
+        //pEyeball = 0.0;
+    } else if( l > lstar && l <= 2.0*lstar ) {
+        pOrc = 0.0;
+        pGoblin = 0.0;
+        pTroll = 50.0 - 50.0*(l - lstar)/lstar;
+        pSkeleton = 50.0 - 50.0*(l - lstar)/lstar;
+        pGolem = 50.0*(l - lstar)/lstar;
+        pSmurf = 50.0*(l - lstar)/lstar;
+        pDemon = 0.0;
+        pSlime = 0.0;
+        pFlayer = 0.0;
+        //pEyeball = 0.0;
+    } else if( l > 2.0*lstar && l <= 3.0*lstar ) {
+        pOrc = 0.0;
+        pGoblin = 0.0;
+        pTroll = 0.0;
+        pSkeleton = 0.0;
+        pGolem = 50.0 - 50.0*(l - 2.0*lstar)/lstar;
+        pSmurf = 50.0 - 50.0*(l - 2.0*lstar)/lstar;
+        pDemon = 50.0*(l - 2.0*lstar)/lstar;
+        pSlime = 50.0*(l - 2.0*lstar)/lstar;
+        pFlayer = 0.0;
+        //pEyeball = 0.0;
+    } else if( l > 3.0*lstar && l <= 4.0*lstar ) {
+        pOrc = 0.0;
+        pGoblin = 0.0;
+        pTroll = 0.0;
+        pSkeleton = 0.0;
+        pGolem = 0.0;
+        pSmurf = 0.0;
+        pDemon = 50.0 - 50.0*(l - 3.0*lstar)/lstar;
+        pSlime = 50.0 - 50.0*(l - 3.0*lstar)/lstar;
+        pFlayer = 50*(l - 3.0*lstar)/lstar;
+        //pEyeball = 50.0*(l - 3.0*lstar)/lstar;
+    } else {
+        pOrc = 10.0;
+        pGoblin = 10.0;
+        pTroll = 10.0;
+        pSkeleton = 10.0;
+        pGolem = 10.0;
+        pSmurf = 10.0;
+        pDemon = 10.0;
+        pSlime = 10.0;
+        pFlayer = 10.0;
+        //pEyeball = 10.0;
+    }
+
+    // Create creatures
+    if ( dice < pOrc ) {
         // Create an Orc
         Object *object = new Object(x, y, CHAR_ORC_PEON, "Orc", TCODColor::white);
-        object->entity = new CreatureEntity(10, 3, 0, "dead orc");
+        object->entity = new CreatureEntity(10, 3, 0, "orc carcass");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_GOBLIN_WARRIOR, "Goblin", TCODColor::white);
+        object->entity = new CreatureEntity(12, 4, 1, "goblin entrials");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_ORGE_WARRIOR_GREEN, "Troll", TCODColor::white);
+        object->entity = new CreatureEntity(14, 5, 2, "troll carcass");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_SKELETON_WARRIOR, "Skeleton", TCODColor::white);
+        object->entity = new CreatureEntity(16, 5, 1, "pile of bones");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton + pGolem ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_GOLEM_BROWN, "Golem", TCODColor::white);
+        object->entity = new CreatureEntity(18, 6, 3, "mound of clay");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton + pGolem + pSmurf ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_UNDEAD_DWARF_AXEBEARER, "Undead Smurf", TCODColor::white);
+        object->entity = new CreatureEntity(20, 6, 1, "smurf entrails");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton + pGolem + pSmurf + pDemon ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_DEMON_HERO, "Demon", TCODColor::white);
+        object->entity = new CreatureEntity(24, 8, 3, "demon carcass");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton + pGolem + pSmurf + pDemon + pSlime ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_SLIME_GREEN, "Slime", TCODColor::white);
+        object->entity = new CreatureEntity(30, 6, 4, "slime puddle");
+        object->entity->ai = new MonsterAi();
+        engine.objects.push(object);
+    } else if ( dice < pOrc + pGoblin + pTroll + pSkeleton + pGolem + pSmurf + pDemon + pSlime + pFlayer ) {
+        // Create an Ogre
+        Object *object = new Object(x, y, CHAR_FLAYER_MAGE, "Flayer", TCODColor::white);
+        object->entity = new CreatureEntity(36, 7, 4, "flayer entrials");
         object->entity->ai = new MonsterAi();
         engine.objects.push(object);
     } else {
         // Create an Ogre
-        Object *object = new Object(x, y, CHAR_ORGE_PEON_GREEN, "Ogre", TCODColor::white);
-        object->entity = new CreatureEntity(16, 4, 1, "ogre carcass");
+        Object *object = new Object(x, y, CHAR_EYEBALL, "Floating Eyeball", TCODColor::white);
+        object->entity = new CreatureEntity(48, 8, 5, "mound of goo");
         object->entity->ai = new MonsterAi();
         engine.objects.push(object);
     }
@@ -193,13 +312,13 @@ void Map::addCreature(int x, int y) {
 void Map::addItem(int x, int y) {
 	TCODRandom *rng = TCODRandom::getInstance();
 	int dice = rng->getInt(0, 100);
-	if ( dice < 75 ) {
+	if ( dice < 80 ) {
 		// create a health potion
 		Object *object = new Object(x,y,CHAR_POTION_RED,"health potion", TCODColor::white);
 		object->blocks = false;
-		object->item = new Potion(Potion::HEAL, 5);
+		object->item = new Potion(Potion::HEAL, 10);
 		engine.objects.push(object);
-    } else if ( dice < 75+10 ) {
+    } else if ( dice < 80+10 ) {
         // create an unknown potion
         int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
         int value = rng->getInt(-3, 3);
@@ -208,26 +327,17 @@ void Map::addItem(int x, int y) {
         object->blocks = false;
         object->item = new Potion(Potion::UNKNOWN, value);
         engine.objects.push(object);
-    } else if ( dice < 75+10+5 ) {
+    } else if ( dice < 80+10+5 ) {
 		// create an attack potion 
 		Object *object = new Object(x,y,CHAR_POTION_GREEN,"attack potion", TCODColor::white);
 		object->blocks = false;
 		object->item = new Potion(Potion::ATK, 1);
 		engine.objects.push(object);
-	} else if ( dice < 75+10+5+5 ) {
+	} else {
 		// create a defense potion
 		Object *object = new Object(x,y,CHAR_POTION_BLUE,"defense potion", TCODColor::white);
 		object->blocks = false;
 		object->item = new Potion(Potion::DEF, 1);
-		engine.objects.push(object);
-	} else {
-		// create an unknown potion
-        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
-        int value = rng->getInt(-3, 3);
-        if( value == 0 ) value = -1;
-		Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
-		object->blocks = false;
-		object->item = new Potion(Potion::UNKNOWN, value);
 		engine.objects.push(object);
 	}
 }
@@ -235,42 +345,89 @@ void Map::addItem(int x, int y) {
 void Map::addEquipment(int x, int y) {
     TCODRandom *rng = TCODRandom::getInstance();
     int dice = rng->getInt(0, 100);
-    if ( dice < 75 ) {
-        // create a health potion
-        Object *object = new Object(x,y,CHAR_POTION_RED,"health potion", TCODColor::white);
+    int dice2 = rng->getInt(0, 100);
+    if ( dice < 25 ) {
+        // create a sword
+        int sym = rng->getInt(CHAR_SWORD_BASIC, CHAR_SWORD_GOLD);
+        int value = rng->getInt(1, 5);
+        Object *object = new Object(x,y,sym,"sword", TCODColor::white);
         object->blocks = false;
-        object->item = new Potion(Potion::HEAL, 5);
+        if( dice2 < 10 ) {
+            object->item = new Equipment(Equipment::CURSED, 0, -value, 0);
+        } else {
+            object->item = new Equipment(Equipment::SWORD, 0, value, 0);
+        }
         engine.objects.push(object);
-    } else if ( dice < 75+10 ) {
-        // create an unknown potion
-        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
-        int value = rng->getInt(-3, 3);
-        if( value == 0 ) value = -1;
-        Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+    } else if ( dice < 25+25 ) {
+        // create a shield
+        int sym = rng->getInt(CHAR_SHIELD_BROWN, CHAR_SHIELD_GOLD);
+        int def = rng->getInt(1, 5);
+        Object *object = new Object(x,y,sym,"shield", TCODColor::white);
         object->blocks = false;
-        object->item = new Potion(Potion::UNKNOWN, value);
+        if( dice2 < 10 ) {
+            object->item = new Equipment(Equipment::CURSED, 0, 0, -def);
+        } else {
+            object->item = new Equipment(Equipment::SHEILD, 0, 0, def);
+        }
         engine.objects.push(object);
-    } else if ( dice < 75+10+5 ) {
-        // create an attack potion 
-        Object *object = new Object(x,y,CHAR_POTION_GREEN,"attack potion", TCODColor::white);
+    } else if ( dice < 25+25+25 ) {
+        // create a ring
+        int sym = rng->getInt(CHAR_RING_RED, CHAR_RING_BLUE);
+        int atk = rng->getInt(1, 5);
+        int def = rng->getInt(1, 5);
+        Object *object = new Object(x,y,sym,"ring", TCODColor::white);
         object->blocks = false;
-        object->item = new Potion(Potion::ATK, 1);
-        engine.objects.push(object);
-    } else if ( dice < 75+10+5+5 ) {
-        // create a defense potion
-        Object *object = new Object(x,y,CHAR_POTION_BLUE,"defense potion", TCODColor::white);
-        object->blocks = false;
-        object->item = new Potion(Potion::DEF, 1);
+        if( dice2 < 10 ) {
+            object->item = new Equipment(Equipment::CURSED, 0, -atk, -def);
+        } else {
+           object->item = new Equipment(Equipment::RING, 0, atk, def);
+        }
         engine.objects.push(object);
     } else {
-        // create an unknown potion
-        int sym = rng->getInt(CHAR_POTION_YELLOW, CHAR_POTION_BLUE);
-        int value = rng->getInt(-3, 3);
-        if( value == 0 ) value = -1;
-        Object *object = new Object(x,y,sym,"unknown potion", TCODColor::white);
+        // create a corpse
+        int def = rng->getInt(-2, 1);
+        Object *object = new Object(x,y,CHAR_SKULL,"carcass", TCODColor::lighterRed);
         object->blocks = false;
-        object->item = new Potion(Potion::UNKNOWN, value);
-        engine.objects.push(object);
+        object->item = new Equipment(Equipment::CORPSE, 0, 0, def);
+        engine.objects.push(object); 
+    }
+}
+
+void Map::updateGoals() {
+    const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+    const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+    const double dcoef = 1.0/32.0, lambda = 1.0;
+
+    int offset = engine.player->x + width*engine.player->y;
+    tiles[offset].goalsPrev[0] = 1.0;
+    offset = engine.stairs->x + width*engine.stairs->y;
+    tiles[offset].goalsPrev[1] = 1.0;
+
+    for(int x = 1; x < width - 2; x++) {
+        for(int y = 1; y < height - 2; y++) {
+            offset = x + width*y;
+            if( map->isWalkable(x, y) ) {
+                double sdiff[2] = {0.0, 0.0};
+                for(int z = 0; z < 8; z++) {
+                    int doffset = x + dx[z] + width*(y + dy[z]);
+                    sdiff[0] += tiles[doffset].goalsPrev[0] - tiles[offset].goalsPrev[0];
+                    sdiff[1] += tiles[doffset].goalsPrev[1] - tiles[offset].goalsPrev[1];
+                }
+                tiles[offset].goals[0] = lambda*(tiles[offset].goalsPrev[0] + dcoef*sdiff[0]);
+                tiles[offset].goals[1] = lambda*(tiles[offset].goalsPrev[1] + dcoef*sdiff[1]);
+            } else {
+                tiles[offset].goals[0] = 0.0;
+                tiles[offset].goals[1] = 0.0;
+            }
+        }
+    }
+
+    for(int x = 1; x < width - 2; x++) {
+        for(int y = 1; y < height - 2; y++) {
+            offset = x + width*y;
+            tiles[offset].goalsPrev[0] = tiles[offset].goals[0];
+            tiles[offset].goalsPrev[1] = tiles[offset].goals[1];
+        }
     }
 }
 
@@ -341,8 +498,8 @@ void Map::render() const {
     int posx = display_x, posy = display_y;
 
     // Torch intensity variation
-    TCODRandom *rng=TCODRandom::getInstance();
-    float ti = rng->getFloat(-0.15f,0.15f);
+    TCODRandom *rng = TCODRandom::getInstance();
+    float ti = rng->getFloat(-0.15f, 0.15f);
 
 	TCODConsole::root->setDefaultBackground(TCODColor::darkestGrey);
 

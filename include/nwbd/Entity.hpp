@@ -20,8 +20,6 @@ public:
 	void attack(Object *owner, Object *target);
 	int damage(Object *owner, int amount);
 	int heal(int amount);
-	void equip(Object *object);
-	void dequip(Object *object);
 	virtual void die(Object *owner);
 };
 

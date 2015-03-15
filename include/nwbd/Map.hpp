@@ -26,8 +26,10 @@ public :
     bool canWalk(int x, int y) const;
     void computeFov();
     void moveDisplay(int x, int y);
+    void updateGoals();
     void render() const;
-	void generateMap(int &upx, int &upy, int &downx, int &downy);                           // Generates a map
+	void generateMap(int &upx, int &upy, int &downx, int &downy); // Generates a map
+    double getGoal(int x, int y, int index) const { return tiles[x + width*y].goals[index]; }
 protected :
 	Tile *tiles;
 	TCODMap *map;

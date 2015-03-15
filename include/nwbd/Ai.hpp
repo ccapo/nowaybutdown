@@ -16,15 +16,6 @@ protected :
 	void moveOrAttack(Object *owner, int targetx, int targety);
 };
 
-class ConfusedMonsterAi : public Ai {
-public :
-	ConfusedMonsterAi(int nbTurns, Ai *prevAi);
-	void update(Object *owner);
-protected :
-	int nTurns;
-	Ai *prevAi;
-};
-
 class PlayerAi : public Ai {
 public :
 	void update(Object *owner);
