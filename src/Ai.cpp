@@ -111,8 +111,8 @@ void PlayerAi::update(Object *owner) {
 				engine.map->generateMap(px, py, dx, dy);
 				engine.player->x = px;
 				engine.player->y = py;
-				engine.stairs->x = px;
-				engine.stairs->y = py;
+				engine.stairs->x = dx;
+				engine.stairs->y = dy;
 
 				engine.objects.push(engine.player);
 				engine.objects.push(engine.stairs);

@@ -284,7 +284,7 @@ Engine::Engine(int windowWidth, int windowHeight) : gameStatus(STARTUP),fovRadiu
 	TCODConsole::mapAsciiCodeToFont(CHAR_FINAL_BOSS_LR, x++, y);
 
     player = new Object(0, 0, '@', "Player", TCODColor::white);
-    player->entity = new PlayerEntity(50, 6, 4, "your corpse");
+    player->entity = new PlayerEntity(30, 5, 3, "your corpse");
     player->entity->ai = new PlayerAi();
     player->container = new Container(12);
 
@@ -374,7 +374,7 @@ bool Engine::update() {
 			if( restart && key.vk == TCODK_ENTER ) return false;
 			if( key.c == 'y' || key.c == 'Y' ) {
 				delete player->entity;
-				player->entity = new PlayerEntity(15, 10, 1, "your corpse");
+				player->entity = new PlayerEntity(15, 8, 1, "your corpse");
 				player->entity->ai = new PlayerAi();
 				player->name = "Re-animated Corpse";
 				player->ch = '@';

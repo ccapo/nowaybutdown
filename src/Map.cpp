@@ -142,16 +142,18 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 	dx = rng->getInt(2, width - 3);
 	dy = rng->getInt(2, height - 3);
 	int dp2 = pow(dx - px, 2) + pow(dy - py, 2);
-	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 - 75*nIteration ) ) && nIteration < 100 )  {
+	while( ( isNotWalkable(dx, dy) || ( dp2 < 8000 - 5*nIteration ) ) && nIteration < 100 )  {
 		dx = rng->getInt(2, width - 3);
 		dy = rng->getInt(2, height - 3);
 		dp2 = pow(dx - px, 2) + pow(dy - py, 2);
         nIteration++;
 	}
+	std::cout << px << "," << py << std::endl;
+	std::cout << dx << "," << dy << std::endl;
 
     // Add items, creatures and equipment depending on depth level
     int l = engine.level;
-    int nitems = 12 - l/2, ncreatures = 24 + (l*l)/2, nequip = 4 - l/2;
+    int nitems = 8 - l/2, ncreatures = 24 + (l*l)/2, nequip = 2 - l/2;
     if( nitems < 0 ) nitems = 0;
     if( nequip < 0 ) nequip = 0;
 	for(int i = 0; i < nitems + ncreatures + nequip; i++) {
@@ -352,7 +354,7 @@ void Map::addEquipment(int x, int y) {
         int value = rng->getInt(1, 5);
         Object *object = new Object(x,y,sym,"sword", TCODColor::white);
         object->blocks = false;
-        if( dice2 < 10 ) {
+        if( dice2 < 25 ) {
             object->item = new Equipment(Equipment::CURSED, 0, -value, 0);
         } else {
             object->item = new Equipment(Equipment::SWORD, 0, value, 0);
@@ -364,7 +366,7 @@ void Map::addEquipment(int x, int y) {
         int def = rng->getInt(1, 5);
         Object *object = new Object(x,y,sym,"shield", TCODColor::white);
         object->blocks = false;
-        if( dice2 < 10 ) {
+        if( dice2 < 25 ) {
             object->item = new Equipment(Equipment::CURSED, 0, 0, -def);
         } else {
             object->item = new Equipment(Equipment::SHEILD, 0, 0, def);
@@ -377,7 +379,7 @@ void Map::addEquipment(int x, int y) {
         int def = rng->getInt(1, 5);
         Object *object = new Object(x,y,sym,"ring", TCODColor::white);
         object->blocks = false;
-        if( dice2 < 10 ) {
+        if( dice2 < 25 ) {
             object->item = new Equipment(Equipment::CURSED, 0, -atk, -def);
         } else {
            object->item = new Equipment(Equipment::RING, 0, atk, def);
@@ -396,7 +398,7 @@ void Map::addEquipment(int x, int y) {
 void Map::updateGoals() {
     const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
     const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
-    const double dcoef = 1.0/32.0, lambda = 1.0;
+    const double dcoef = 1.0/8.0, lambda = 1.0;
 
     int offset = engine.player->x + width*engine.player->y;
     tiles[offset].goalsPrev[0] = 1.0;

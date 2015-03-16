@@ -27,8 +27,9 @@ void Entity::attack(Object *owner, Object *target) {
 }
 
 int Entity::damage(Object *owner, int amount) {
-	amount /= 2;
-	amount -= def/4;
+	float d = 0.5*static_cast<float>(amount);
+	d -= 0.25*static_cast<float>(def);
+	amount = static_cast<int>(d);
 	if ( amount > 0 ) {
 		hp -= amount;
 		if ( hp <= 0 ) {
