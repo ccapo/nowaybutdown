@@ -31,6 +31,9 @@ int Entity::damage(Object *owner, int amount) {
 	d -= 0.25*static_cast<float>(def);
 	amount = static_cast<int>(d);
 	if ( amount > 0 ) {
+		TCODRandom *rng = TCODRandom::getInstance();
+		int r = rng->getInt(1, amount);
+		amount = r;
 		hp -= amount;
 		if ( hp <= 0 ) {
 			die(owner);
