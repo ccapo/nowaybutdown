@@ -249,7 +249,7 @@ void Map::addCreature(int x, int y) {
     if ( dice < pOrc ) {
         // Create an Orc
         Object *object = new Object(x, y, CHAR_ORC_PEON, "Orc", TCODColor::white);
-        object->entity = new CreatureEntity(10, 3, 0, "orc carcass");
+        object->entity = new CreatureEntity(10, 4, 0, "orc carcass");
         object->entity->ai = new MonsterAi();
         engine.objects.push(object);
     } else if ( dice < pOrc + pGoblin ) {
