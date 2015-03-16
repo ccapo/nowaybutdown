@@ -148,8 +148,6 @@ void Map::generateMap(int &px, int &py, int &dx, int &dy) {
 		dp2 = pow(dx - px, 2) + pow(dy - py, 2);
         nIteration++;
 	}
-	std::cout << px << "," << py << std::endl;
-	std::cout << dx << "," << dy << std::endl;
 
     // Add items, creatures and equipment depending on depth level
     int l = engine.level;
