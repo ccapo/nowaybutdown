@@ -4,7 +4,7 @@
 * Only down passageway, tunnel collapses behind the player after traversing
     * Only need to keep current map in memory
     * Map creation should be fast
-* Modify map generation to use Cellular Automata
+* Modify map generation to be more cave-like
 * Add scent/goal tracking for creature AI
     * Try several AI ideas
 * Player stats display in GUI
