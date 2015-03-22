@@ -1,5 +1,5 @@
 # 2015 7DRL Challenge Entry
-* Title: No Way But Down
+* Title: NoWayButDown
 * Start with C++ Rogue-like tutorial, Part 9 by jice
 * Only down passageway, tunnel collapses behind the player after traversing
     * Only need to keep current map in memory
