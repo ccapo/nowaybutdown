@@ -1,17 +1,17 @@
 class Engine {
 public :
-	enum GameStatus {
-		STARTUP,
-		IDLE,
-		NEW_TURN,
-		VICTORY,
-		DEFEAT
-	} gameStatus;
-	TCOD_key_t lastKey;
-	TCOD_mouse_t mouse;
+  enum GameStatus {
+    STARTUP,
+    IDLE,
+    NEW_TURN,
+    VICTORY,
+    DEFEAT
+  } gameStatus;
+  TCOD_key_t lastKey;
+  TCOD_mouse_t mouse;
     TCODList<Object *> objects;
     Object *player;
-	Object *stairs;
+  Object *stairs;
     Map *map;
     int fovRadius;
     int windowWidth;
@@ -21,7 +21,6 @@ public :
     int mapWidth;
     int mapHeight;
     int level;
-    bool restart;
     Gui *gui;
 
     Engine(int windowWidth, int windowHeight);
